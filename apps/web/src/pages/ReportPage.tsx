@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, ApiError } from "../lib/api.ts";
 import { useAuth } from "../lib/auth.tsx";
 import { Button } from "../components/ui/Button.tsx";
@@ -34,11 +35,13 @@ interface ExpenseItem {
 export default function ReportPage() {
   const { user, plan } = useAuth();
   const isOwner = user?.role === "owner";
+  const navigate = useNavigate();
 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [report, setReport] = useState<DailyReportData | null>(null);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
 
   // Modal Input Pengeluaran
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
@@ -50,6 +53,30 @@ export default function ReportPage() {
 
   const formatRupiah = (val: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(val);
+
+  const handleClearAllTransactions = async () => {
+    const confirmFirst = window.confirm(
+      "⚠️ PERINGATAN: Anda akan menghapus SELURUH riwayat transaksi dan mereset nomor nota.\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?"
+    );
+    if (!confirmFirst) return;
+
+    const phrase = window.prompt("Ketik 'BERSIHKAN' untuk mengonfirmasi penghapusan seluruh data transaksi:");
+    if (phrase !== "BERSIHKAN") {
+      alert("Konfirmasi dibatalkan. Data tidak dihapus.");
+      return;
+    }
+
+    setClearing(true);
+    try {
+      const res = await api.del<{ message: string; deletedCount: number }>("/api/transactions/clear-all");
+      alert(`Berhasil: ${res.message} (${res.deletedCount} transaksi dihapus).`);
+      await fetchReport(selectedDate);
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Gagal membersihkan transaksi.");
+    } finally {
+      setClearing(false);
+    }
+  };
 
   const fetchReport = async (date: string) => {
     try {
@@ -136,16 +163,29 @@ export default function ReportPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             className="w-auto py-2 text-xs"
           />
+          <Button onClick={() => navigate("/transaksi")} variant="secondary">
+            📋 Riwayat Transaksi
+          </Button>
           <Button onClick={() => { setExpenseError(null); setExpenseModalOpen(true); }} variant="secondary">
             + Catat Biaya
           </Button>
+          {isOwner && (
+            <Button
+              onClick={handleClearAllTransactions}
+              variant="danger"
+              disabled={clearing}
+              title="Hapus seluruh riwayat transaksi toko dan reset nomor nota"
+            >
+              {clearing ? "Membersihkan..." : "🗑️ Bersihkan Semua Transaksi"}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -229,9 +269,18 @@ export default function ReportPage() {
 
           {/* Rincian Metode Pembayaran (Riwayat Pembayaran) */}
           <div className="bg-[#1a1a20] rounded-2xl border border-[#27272a] p-5 space-y-4">
-            <h2 className="text-base font-bold text-[#f4f4f5]">
-              Riwayat Pembayaran Masuk (Tutup Kasir)
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h2 className="text-base font-bold text-[#f4f4f5]">
+                Riwayat Pembayaran Masuk (Tutup Kasir)
+              </h2>
+              <button
+                type="button"
+                onClick={() => navigate("/transaksi")}
+                className="text-xs text-[#C6FF3D] hover:underline flex items-center gap-1 font-medium text-left"
+              >
+                Lihat Detail Transaksi & Hapus Per Transaksi →
+              </button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="p-4 bg-[#101014] rounded-xl border border-[#27272a] space-y-1">
                 <div className="flex items-center justify-between">
