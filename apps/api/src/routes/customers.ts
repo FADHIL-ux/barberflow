@@ -215,3 +215,27 @@ customerRoutes.post("/:id/consent", requireRole("owner", "cashier"), async (c) =
   return c.json({ ok: true, purpose: input.purpose, isGranted: input.isGranted });
 });
 
+// DELETE /api/customers/:id -> Hapus data pelanggan (Khusus Owner & Kasir)
+customerRoutes.delete("/:id", requireRole("owner", "cashier"), async (c) => {
+  const tenantId = tenantIdOf(c);
+  const id = parseId(c.req.param("id"));
+  const auth = c.get("auth");
+
+  const deleted = await withTenant(tenantId, async (db) => {
+    const custRes = await db.query<{ name: string }>(
+      `SELECT name FROM customers WHERE id = $1 AND tenant_id = $2`,
+      [id, tenantId],
+    );
+    const cust = custRes.rows[0];
+    if (!cust) return false;
+
+    // Hapus customer (customer_consents cascade, queue_entries/transactions/bookings set NULL)
+    await db.query(`DELETE FROM customers WHERE id = $1 AND tenant_id = $2`, [id, tenantId]);
+    await writeAudit(db, auth, "customer.delete", "customer", id, { name: cust.name });
+    return true;
+  });
+
+  if (!deleted) throw new HTTPException(404, { message: "Pelanggan tidak ditemukan." });
+  return c.json({ ok: true, message: "Pelanggan berhasil dihapus." });
+});
+

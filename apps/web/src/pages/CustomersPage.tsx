@@ -162,6 +162,18 @@ export default function CustomersPage() {
     }
   };
 
+  const handleDelete = async (cust: CustomerItem) => {
+    if (!window.confirm(`Hapus data pelanggan "${cust.name}"? Data preferensi dan persetujuan privasi juga akan dihapus.`)) {
+      return;
+    }
+    try {
+      await api.del(`/api/customers/${cust.id}`);
+      await fetchCustomers(search);
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Gagal menghapus pelanggan.");
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -242,6 +254,14 @@ export default function CustomersPage() {
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => openEditModal(c)}>
                       Ubah
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                      onClick={() => void handleDelete(c)}
+                    >
+                      Hapus
                     </Button>
                   </td>
                 </tr>
