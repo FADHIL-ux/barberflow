@@ -96,10 +96,12 @@
    ```bash
    npm run seed -w @barberflow/api
    ```
-   *Akun Demo yang tersedia:*
-   - **Owner**: `owner@demo.com` / Password: `demo1234`
-   - **Kasir**: `kasir@demo.com` / Password: `demo1234`
-   - **Super Admin**: `admin@platform.local` / Password: `adminpassword123`
+   *Akun Demo yang tersedia (Password semua akun: `Demo12345!`):*
+   - **Super Admin**: `admin@barberflow.test`
+   - **Owner**: `owner@demo.test`
+   - **Kasir**: `kasir@demo.test`
+   - **Kapster**: `kapster@demo.test`
+   - **Tautan Booking Publik Demo**: `http://localhost:5173/demo-barbershop/book`
 
 7. **Jalankan server pengembangan**:
    ```bash

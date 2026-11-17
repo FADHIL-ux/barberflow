@@ -10,8 +10,8 @@ test.describe("BarberFlow — Alur Kasir & Cetak Struk Penuh", () => {
     await expect(page.getByLabel("Password")).toBeVisible();
 
     // Isi formulir login
-    await page.getByLabel("Email").fill("owner@demo.com");
-    await page.getByLabel("Password").fill("demo1234");
+    await page.getByLabel("Email").fill("owner@demo.test");
+    await page.getByLabel("Password").fill("Demo12345!");
     await page.getByRole("button", { name: "Masuk ke Aplikasi" }).click();
 
     // Diarahkan ke papan antrean setelah login
@@ -49,7 +49,7 @@ test.describe("BarberFlow — Alur Kasir & Cetak Struk Penuh", () => {
 
   test("3. Halaman Booking Online Publik (Tanpa Autentikasi)", async ({ page }) => {
     // Halaman booking dapat diakses langsung oleh pelanggan umum
-    await page.goto("/demo-barber/book");
+    await page.goto("/demo-barbershop/book");
 
     // Jika tenant belum di-seed, verifikasi tampilan fallback ramah pengguna
     const heading = page.locator("h1, h2");

@@ -12,6 +12,7 @@
     "dev:api": "npm run dev -w @barberflow/api",
     "test": "npm run test:unit && npm run test -w @barberflow/api",
     "test:unit": "node --test \"packages/shared/src/**/*.test.ts\"",
+    "test:e2e": "playwright test",
     "typecheck": "npm run typecheck -w @barberflow/shared && npm run typecheck -w @barberflow/api && npm run typecheck -w @barberflow/web",
     "build:web": "npm run build -w @barberflow/web"
   },
