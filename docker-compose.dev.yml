@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_OWNER_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_OWNER_PASSWORD}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+      PLATFORM_DB_PASSWORD: ${PLATFORM_DB_PASSWORD}
+      TZ: UTC
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  pgdata:

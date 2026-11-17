@@ -1,0 +1,20 @@
+{
+  "name": "barberflow",
+  "private": true,
+  "version": "0.2.0",
+  "engines": { "node": ">=22" },
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "db:up": "docker compose -f docker-compose.dev.yml up -d",
+    "db:down": "docker compose -f docker-compose.dev.yml down",
+    "db:reset": "docker compose -f docker-compose.dev.yml down -v && docker compose -f docker-compose.dev.yml up -d",
+    "db:migrate": "node scripts/migrate.mjs",
+    "dev:api": "npm run dev -w @barberflow/api",
+    "test:unit": "node --test \"packages/shared/src/**/*.test.ts\"",
+    "typecheck": "npm run typecheck -w @barberflow/shared && npm run typecheck -w @barberflow/api && npm run typecheck -w @barberflow/web",
+    "build:web": "npm run build -w @barberflow/web"
+  },
+  "devDependencies": {
+    "pg": "^8.13.0"
+  }
+}
