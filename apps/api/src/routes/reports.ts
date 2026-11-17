@@ -230,3 +230,4 @@ reportRoutes.get("/monthly", async (c) => {
 
   return c.json(report);
 });
+

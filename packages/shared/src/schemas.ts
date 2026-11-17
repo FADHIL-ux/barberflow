@@ -135,6 +135,35 @@ export const offlineSyncBatchSchema = z.object({
   transactions: z.array(offlineSyncItemSchema).min(1, "Minimal satu transaksi untuk disinkronkan"),
 });
 
+export const createBookingSchema = z.object({
+  barberId: z.string().uuid("Pilih kapster yang valid"),
+  serviceId: z.string().uuid("Pilih layanan yang valid"),
+  customerName: z.string().trim().min(2, "Nama minimal 2 karakter").max(120),
+  customerPhone: z.string().trim().regex(/^[0-9+]{8,16}$/, "Nomor telepon tidak valid").nullable().optional(),
+  startsAt: z.string().datetime({ offset: true }),
+});
+
+export const adminCreateTenantSchema = z.object({
+  name: z.string().trim().min(2, "Nama barbershop minimal 2 karakter").max(120),
+  slug: z.string().trim().regex(/^[a-z0-9-]{3,50}$/, "Slug 3-50 karakter huruf kecil, angka, dan dash"),
+  plan: z.enum(["starter", "pro"]),
+  ownerEmail: z.string().trim().email("Email tidak valid"),
+  ownerName: z.string().trim().min(2, "Nama pemilik minimal 2 karakter"),
+  ownerPassword: z.string().min(10, "Password minimal 10 karakter"),
+});
+
+export const adminUpdateTenantSchema = z.object({
+  plan: z.enum(["starter", "pro"]).optional(),
+  featureFlags: z.record(z.boolean()).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const sendWhatsAppSchema = z.object({
+  customerId: z.string().uuid("ID pelanggan tidak valid"),
+  template: z.string().min(1, "Template pesan wajib diisi"),
+  idempotencyKey: z.string().min(16).max(100),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ServiceInput = z.infer<typeof serviceSchema>;
@@ -151,3 +180,7 @@ export type CommissionRuleInput = z.infer<typeof commissionRuleSchema>;
 export type ExpenseInput = z.infer<typeof expenseSchema>;
 export type OfflineSyncItemInput = z.infer<typeof offlineSyncItemSchema>;
 export type OfflineSyncBatchInput = z.infer<typeof offlineSyncBatchSchema>;
+export type CreateBookingInput = z.infer<typeof createBookingSchema>;
+export type AdminCreateTenantInput = z.infer<typeof adminCreateTenantSchema>;
+export type AdminUpdateTenantInput = z.infer<typeof adminUpdateTenantSchema>;
+export type SendWhatsAppInput = z.infer<typeof sendWhatsAppSchema>;

@@ -5,8 +5,10 @@ import { HTTPException } from "hono/http-exception";
 import { secureHeaders } from "hono/secure-headers";
 import { ZodError } from "zod";
 import { env } from "./env.ts";
+import { adminRoutes } from "./routes/admin.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { barberRoutes } from "./routes/barbers.ts";
+import { bookingRoutes } from "./routes/bookings.ts";
 import { commissionRoutes } from "./routes/commissions.ts";
 import { customerRoutes } from "./routes/customers.ts";
 import { expenseRoutes } from "./routes/expenses.ts";
@@ -20,6 +22,7 @@ import { serviceRoutes } from "./routes/services.ts";
 import { syncRoutes } from "./routes/sync.ts";
 import { transactionRoutes } from "./routes/transactions.ts";
 import { userRoutes } from "./routes/users.ts";
+import { whatsappRoutes } from "./routes/whatsapp.ts";
 
 export const app = new Hono();
 
@@ -44,6 +47,9 @@ app.route("/api/commissions", commissionRoutes);
 app.route("/api/expenses", expenseRoutes);
 app.route("/api/reports", reportRoutes);
 app.route("/api/sync", syncRoutes);
+app.route("/api/whatsapp", whatsappRoutes);
+app.route("/api/bookings", bookingRoutes);
+app.route("/api/admin", adminRoutes);
 app.route("/public", publicRoutes);
 
 app.notFound((c) => c.json({ error: "Alamat tidak ditemukan." }, 404));

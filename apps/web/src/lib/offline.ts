@@ -106,3 +106,4 @@ export function generateTempReceiptRef(): string {
   const padSeq = String(seq).padStart(4, "0");
   return `OFFLINE-${devId}-${padSeq}`;
 }
+
