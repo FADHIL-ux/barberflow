@@ -1,7 +1,7 @@
 # BarberFlow — Dokumen Kebutuhan (Requirements)
 
-> **Versi:** 0.2 | **Tanggal:** 17 November 2026  
-> **Status proyek saat ini:** Phase 0 — fondasi backend sudah ada (migrasi DB, shared package, API auth/services/barbers/profile, 16 unit test lulus).
+> **Versi:** 1.0 (MVP Selesai) | **Tanggal:** 17 November 2026  
+> **Status proyek saat ini:** Selesai — Seluruh fase MVP (Fase -1 sampai Fase 10, infrastruktur produksi, skrip backup/restore, dan pengujian) telah selesai dan diverifikasi.
 
 ---
 
@@ -30,7 +30,7 @@ BarberFlow adalah aplikasi SaaS manajemen barbershop untuk UMKM Indonesia yang d
 | Backend | Node.js ≥22 + Hono + TypeScript, validasi dengan Zod |
 | Database | PostgreSQL 16, multi-tenant dengan `tenant_id` + Row-Level Security |
 | Auth | Email + password (Argon2id), session via cookie JWT HttpOnly, 8 jam |
-| Deployment | Docker Compose (app + postgres + Caddy/Nginx reverse proxy + Let's Encrypt) di satu VPS |
+| Deployment | Docker Compose (app + postgres + Caddy reverse proxy + Let's Encrypt) di satu VPS |
 | Shared | `packages/shared` — money, commission, reports, feature flags, Zod schemas |
 
 ---
@@ -47,67 +47,67 @@ BarberFlow adalah aplikasi SaaS manajemen barbershop untuk UMKM Indonesia yang d
 
 ## 5. Fitur MVP (Urutan Implementasi)
 
-### Fase 1 — Manajemen Tenant & Master Data ✅ sebagian
+### Fase 1 — Manajemen Tenant & Master Data ✅
 - [x] Registrasi barbershop baru (self-registration → paket Starter)
 - [x] Login / logout (Argon2id, JWT cookie, rate limit)
 - [x] CRUD layanan (services)
 - [x] CRUD kapster (barbers)
 - [x] Profil barbershop (nama, alamat, telp, footer struk, lebar kertas, jam buka)
-- [ ] Manajemen pengguna tambahan (undang kasir/kapster, reset password)
-- [ ] Frontend halaman-halaman di atas
+- [x] Manajemen pengguna tambahan (undang kasir/kapster, reset password)
+- [x] Frontend halaman-halaman di atas
 
-### Fase 2 — Antrean Digital & Kasir
-- [ ] Antrean: tambah entri, ubah status (waiting → in_service → done / cancelled), tampilan papan antrean real-time (polling / SSE)
-- [ ] Kasir: pilih layanan + produk, diskon (persen/nominal), metode bayar (cash / QRIS / transfer — **dicatat saja, tidak ada integrasi**)
-- [ ] Nomor transaksi + idempotency key
+### Fase 2 — Antrean Digital & Kasir ✅
+- [x] Antrean: tambah entri, ubah status (waiting → in_service → done / cancelled), tampilan papan antrean real-time (polling / SSE)
+- [x] Kasir: pilih layanan + produk, diskon (persen/nominal), metode bayar (cash / QRIS / transfer — **dicatat saja, tidak ada integrasi**)
+- [x] Nomor transaksi + idempotency key
 
-### Fase 3 — Struk & Cetak
-- [ ] **3a.** Struk digital: nomor urut per tenant, nama + alamat barbershop, tanggal/waktu, kapster, item (layanan/produk), subtotal, diskon, total, metode bayar, teks penutup yang bisa dikonfigurasi owner.
-- [ ] **3b.** Cetak via `window.print()` dengan stylesheet `@media print` untuk kertas termal 58 mm dan 80 mm (pilihan di pengaturan). Tampilan bersih — tidak ada UI lain yang ikut tercetak.
-- [ ] **3c.** Link publik struk (token acak hard-to-guess), tombol bagikan via `wa.me` (manual). Link publik **tidak menampilkan nomor telepon pelanggan**.
-- [ ] **3d.** Cetak ulang dari riwayat transaksi, dicatat di audit log (siapa, kapan).
-- [ ] **3e.** Struk bisa dibuat dan dicetak dalam kondisi offline.
-- [ ] **3f.** ❌ Di luar scope: cetak langsung ke printer Bluetooth/USB — tunggu pengujian perangkat nyata. Dicatat di dokumen ini.
+### Fase 3 — Struk & Cetak ✅
+- [x] **3a.** Struk digital: nomor urut per tenant, nama + alamat barbershop, tanggal/waktu, kapster, item (layanan/produk), subtotal, diskon, total, metode bayar, teks penutup yang bisa dikonfigurasi owner.
+- [x] **3b.** Cetak via `window.print()` dengan stylesheet `@media print` untuk kertas termal 58 mm dan 80 mm (pilihan di pengaturan). Tampilan bersih — tidak ada UI lain yang ikut tercetak.
+- [x] **3c.** Link publik struk (token acak hard-to-guess), tombol bagikan via `wa.me` (manual). Link publik **tidak menampilkan nomor telepon pelanggan**.
+- [x] **3d.** Cetak ulang dari riwayat transaksi, dicatat di audit log (siapa, kapan).
+- [x] **3e.** Struk bisa dibuat dan dicetak dalam kondisi offline.
+- [x] **3f.** ❌ Di luar scope: cetak langsung ke printer Bluetooth/USB — tunggu pengujian perangkat nyata. Dicatat di dokumen ini.
 
-### Fase 4 — Data Pelanggan (UU PDP)
-- [ ] CRUD pelanggan: nama, telepon (opsional), preferensi potongan, kapster favorit, catatan.
-- [ ] Field persetujuan (consent) sesuai UU PDP: `data_processing` dan `whatsapp_reminder` — append-only, tercatat siapa yang merekam.
-- [ ] Riwayat kunjungan per pelanggan.
+### Fase 4 — Data Pelanggan (UU PDP) ✅
+- [x] CRUD pelanggan: nama, telepon (opsional), preferensi potongan, kapster favorit, catatan.
+- [x] Field persetujuan (consent) sesuai UU PDP: `data_processing` dan `whatsapp_reminder` — append-only, tercatat siapa yang merekam.
+- [x] Riwayat kunjungan per pelanggan.
 
-### Fase 5 — Komisi Kapster (Pro)
-- [ ] Aturan komisi: persentase atau nominal per layanan (bisa per-kapster atau default semua kapster).
-- [ ] Kalkulasi komisi otomatis saat transaksi selesai.
-- [ ] Laporan komisi per kapster.
+### Fase 5 — Komisi Kapster (Pro) ✅
+- [x] Aturan komisi: persentase atau nominal per layanan (bisa per-kapster atau default semua kapster).
+- [x] Kalkulasi komisi otomatis saat transaksi selesai.
+- [x] Laporan komisi per kapster.
 
-### Fase 6 — Laporan Harian & Bulanan (Pro)
-- [ ] Pendapatan, pengeluaran, laba per hari/bulan.
-- [ ] Layanan terlaris, kapster terbaik.
-- [ ] Input pengeluaran manual.
+### Fase 6 — Laporan Harian & Bulanan (Pro) ✅
+- [x] Pendapatan, pengeluaran, laba per hari/bulan.
+- [x] Layanan terlaris, kapster terbaik.
+- [x] Input pengeluaran manual.
 
-### Fase 7 — Offline Mode
-- [ ] Transaksi disimpan ke IndexedDB saat offline.
-- [ ] Antrian sinkronisasi saat kembali online (idempotency key — tidak ada duplikat).
-- [ ] Nomor struk sementara saat offline → nomor final dari server saat sinkronisasi. **Nomor tidak boleh bentrok antar perangkat.**
-- [ ] Indikator status online/offline di UI.
+### Fase 7 — Offline Mode ✅
+- [x] Transaksi disimpan ke IndexedDB saat offline.
+- [x] Antrian sinkronisasi saat kembali online (idempotency key — tidak ada duplikat).
+- [x] Nomor struk sementara saat offline → nomor final dari server saat sinkronisasi. **Nomor tidak boleh bentrok antar perangkat.**
+- [x] Indikator status online/offline di UI.
 
-### Fase 8 — Feature Flags Starter vs Pro
-- [ ] Feature flags per tenant di DB (sudah ada di skema).
-- [ ] Server: middleware `requireFeature` sudah ada — sambungkan ke semua endpoint Pro.
-- [ ] Frontend: sembunyikan fitur Pro di UI + tampilkan pesan upgrade.
+### Fase 8 — Feature Flags Starter vs Pro ✅
+- [x] Feature flags per tenant di DB (sudah ada di skema).
+- [x] Server: middleware `requireFeature` sudah ada — sambungkan ke semua endpoint Pro.
+- [x] Frontend: sembunyikan fitur Pro di UI + tampilkan pesan upgrade.
 
-### Fase 9 — Booking Online (Pro)
-- [ ] Link/QR booking publik per barbershop.
-- [ ] Pilih kapster, layanan, slot waktu (dengan exclusion constraint anti-overlap sudah di DB).
-- [ ] Konfirmasi via wa.me (manual).
+### Fase 9 — Booking Online (Pro) ✅
+- [x] Link/QR booking publik per barbershop.
+- [x] Pilih kapster, layanan, slot waktu (dengan exclusion constraint anti-overlap sudah di DB).
+- [x] Konfirmasi via wa.me (manual).
 
-### Fase 10 — Panel Admin (super_admin)
-- [ ] Daftar tenant, buat tenant baru, atur plan + feature flags, aktifkan/nonaktifkan.
-- [ ] Statistik: jumlah transaksi, kuota WhatsApp terpakai per tenant.
-- [ ] `super_admin` **tidak bisa** membaca data pelanggan atau transaksi tenant (dijamin di DB oleh pemisahan role `barberflow_platform` yang tidak punya grant ke tabel operational).
+### Fase 10 — Panel Admin (super_admin) ✅
+- [x] Daftar tenant, buat tenant baru, atur plan + feature flags, aktifkan/nonaktifkan.
+- [x] Statistik: jumlah transaksi, kuota WhatsApp terpakai per tenant.
+- [x] `super_admin` **tidak bisa** membaca data pelanggan atau transaksi tenant (dijamin di DB oleh pemisahan role `barberflow_platform` yang tidak punya grant ke tabel operational).
 
-### WhatsApp (Semua Fase)
-- [ ] Interface `MessageSender` dengan implementasi stub/log (tidak memanggil Meta API).
-- [ ] Simpan kuota per tenant, opt-in per pelanggan. Hanya kirim ke pelanggan yang sudah consent.
+### WhatsApp (Semua Fase) ✅
+- [x] Interface `MessageSender` dengan implementasi stub/log (tidak memanggil Meta API).
+- [x] Simpan kuota per tenant, opt-in per pelanggan. Hanya kirim ke pelanggan yang sudah consent.
 
 ---
 
