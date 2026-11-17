@@ -132,18 +132,18 @@
 ### Backend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | `GET /api/reports/daily?date=` — pendapatan, pengeluaran, laba, layanan terlaris, kapster terbaik | `feat(api): daily report` |
-| ⬜ | `GET /api/reports/monthly?year=&month=` — agregasi bulanan | `feat(api): monthly report` |
-| ⬜ | Route pengeluaran: `GET/POST /api/expenses` | `feat(api): expense routes` |
-| ⬜ | Unit test: kalkulasi laporan (sudah ada kerangka di shared) | `test(shared): report calculations` |
+| ✅ | `GET /api/reports/daily?date=` — pendapatan, pengeluaran, laba, layanan terlaris, kapster terbaik | `feat(api): daily report` |
+| ✅ | `GET /api/reports/monthly?year=&month=` — agregasi bulanan | `feat(api): monthly report` |
+| ✅ | Route pengeluaran: `GET/POST /api/expenses` | `feat(api): expense routes` |
+| ✅ | Unit test: kalkulasi laporan (sudah ada kerangka di shared) | `test(shared): report calculations` |
 
 ### Frontend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Halaman laporan harian (Pro) — grafik pendapatan vs pengeluaran | `feat(web): daily report page` |
-| ⬜ | Halaman laporan bulanan (Pro) | `feat(web): monthly report page` |
-| ⬜ | Halaman input pengeluaran | `feat(web): expense entry page` |
-| ⬜ | Gate UI: sembunyikan halaman Pro + tampilkan tombol upgrade | `feat(web): pro feature gating` |
+| ✅ | Halaman laporan harian (Pro) — grafik pendapatan vs pengeluaran | `feat(web): daily report page` |
+| ✅ | Halaman laporan bulanan (Pro) | `feat(web): monthly report page` |
+| ✅ | Halaman input pengeluaran | `feat(web): expense entry page` |
+| ✅ | Gate UI: sembunyikan halaman Pro + tampilkan tombol upgrade | `feat(web): pro feature gating` |
 
 ---
 
@@ -152,16 +152,16 @@
 ### Frontend (terutama)
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | IndexedDB schema (Dexie.js): `pending_transactions`, `local_receipts` | `feat(web): indexeddb schema` |
-| ⬜ | Simpan transaksi ke IndexedDB saat offline + generate nomor struk sementara | `feat(web): offline transaction queue` |
-| ⬜ | Service worker: background sync saat kembali online | `feat(web): background sync` |
-| ⬜ | Indikator online/offline di header | `feat(web): online status indicator` |
-| ⬜ | Nomor struk sementara format: `{device_id}-{local_seq}` — tidak bentrok antar perangkat | `feat(web): offline receipt numbering` |
+| ✅ | IndexedDB schema (Dexie.js / Native IDB): `pending_transactions`, `local_receipts` | `feat(web): indexeddb schema` |
+| ✅ | Simpan transaksi ke IndexedDB saat offline + generate nomor struk sementara | `feat(web): offline transaction queue` |
+| ✅ | Service worker: background sync saat kembali online | `feat(web): background sync` |
+| ✅ | Indikator online/offline di header | `feat(web): online status indicator` |
+| ✅ | Nomor struk sementara format: `{device_id}-{local_seq}` — tidak bentrok antar perangkat | `feat(web): offline receipt numbering` |
 
 ### Backend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Endpoint `POST /api/sync` — batch submit transaksi offline (idempotency_key sudah ada di DB) | `feat(api): offline sync endpoint` |
+| ✅ | Endpoint `POST /api/sync` — batch submit transaksi offline (idempotency_key sudah ada di DB) | `feat(api): offline sync endpoint` |
 | ⬜ | Integration test: 2 perangkat offline → sync → tidak ada nomor struk duplikat | `test(api): offline sync no collision` |
 
 ---

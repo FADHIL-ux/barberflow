@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth.tsx";
+import { useOnlineStatus } from "../../lib/useOnlineStatus.ts";
 
 const navItems = [
   {
@@ -52,6 +53,7 @@ const navItems = [
 
 export function AppShell() {
   const { user, logout } = useAuth();
+  const { isOnline, pendingCount, isSyncing, syncNow } = useOnlineStatus();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -64,8 +66,26 @@ export function AppShell() {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-[#1a1a20] border-r border-[#27272a] fixed top-0 left-0 h-dvh z-10">
         <div className="p-4 border-b border-[#27272a]">
-          <span className="text-[#C6FF3D] font-bold text-xl">BarberFlow</span>
-          {user && <p className="text-[#71717a] text-xs mt-1 truncate">{user.name} ({user.role})</p>}
+          <div className="flex items-center justify-between">
+            <span className="text-[#C6FF3D] font-bold text-xl">BarberFlow</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? "bg-[#C6FF3D]" : "bg-red-500"}`} />
+              <span className="text-[11px] text-[#71717a] font-medium">{isOnline ? "Online" : "Offline"}</span>
+            </div>
+          </div>
+          {pendingCount > 0 && (
+            <div className="mt-2 p-2 bg-yellow-900/30 border border-yellow-800 rounded-lg text-xs text-yellow-300 flex justify-between items-center">
+              <span>{pendingCount} transaksi offline</span>
+              <button
+                onClick={() => void syncNow()}
+                disabled={!isOnline || isSyncing}
+                className="underline font-bold cursor-pointer disabled:opacity-50"
+              >
+                {isSyncing ? "..." : "Sync"}
+              </button>
+            </div>
+          )}
+          {user && <p className="text-[#71717a] text-xs mt-2 truncate">{user.name} ({user.role})</p>}
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => (
@@ -96,7 +116,21 @@ export function AppShell() {
       <main className="flex-1 md:ml-64 flex flex-col min-h-dvh">
         {/* Mobile top bar */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[#1a1a20] border-b border-[#27272a] sticky top-0 z-10">
-          <span className="text-[#C6FF3D] font-bold text-lg">BarberFlow</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[#C6FF3D] font-bold text-lg">BarberFlow</span>
+            {!isOnline ? (
+              <span className="text-[10px] bg-red-900/60 text-red-300 border border-red-700 px-2 py-0.5 rounded-full font-medium">
+                Offline
+              </span>
+            ) : pendingCount > 0 ? (
+              <button
+                onClick={() => void syncNow()}
+                className="text-[10px] bg-yellow-900/60 text-yellow-300 border border-yellow-700 px-2 py-0.5 rounded-full font-medium cursor-pointer"
+              >
+                {isSyncing ? "Sinkron..." : `${pendingCount} antre`}
+              </button>
+            ) : null}
+          </div>
           {user && <span className="text-[#71717a] text-xs">{user.name}</span>}
         </header>
 

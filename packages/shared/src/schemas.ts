@@ -112,6 +112,29 @@ export const commissionRuleSchema = z.object({
   { message: "Komisi persentase maksimal 100%", path: ["value"] }
 );
 
+export const expenseSchema = z.object({
+  expenseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD"),
+  category: z.string().trim().min(2, "Kategori minimal 2 karakter").max(60),
+  description: z.string().trim().max(300).default(""),
+  amountIdr: z.number().int().min(1, "Nominal pengeluaran harus lebih besar dari 0"),
+});
+
+export const offlineSyncItemSchema = z.object({
+  tempReceiptRef: z.string().min(5).max(50),
+  idempotencyKey: z.string().min(16).max(100),
+  barberId: z.string().uuid().nullable().optional(),
+  customerId: z.string().uuid().nullable().optional(),
+  items: z.array(transactionItemSchema).min(1, "Transaksi harus memiliki minimal satu item"),
+  discountType: z.enum(["none", "percent", "fixed"]).default("none"),
+  discountValue: z.number().min(0).default(0),
+  paymentMethod: z.enum(["cash", "qris", "transfer"]),
+  occurredAt: z.string().datetime({ offset: true }),
+});
+
+export const offlineSyncBatchSchema = z.object({
+  transactions: z.array(offlineSyncItemSchema).min(1, "Minimal satu transaksi untuk disinkronkan"),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ServiceInput = z.infer<typeof serviceSchema>;
@@ -125,3 +148,6 @@ export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 export type CustomerInput = z.infer<typeof customerSchema>;
 export type CustomerConsentInput = z.infer<typeof customerConsentSchema>;
 export type CommissionRuleInput = z.infer<typeof commissionRuleSchema>;
+export type ExpenseInput = z.infer<typeof expenseSchema>;
+export type OfflineSyncItemInput = z.infer<typeof offlineSyncItemSchema>;
+export type OfflineSyncBatchInput = z.infer<typeof offlineSyncBatchSchema>;

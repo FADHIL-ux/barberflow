@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api.ts";
+import { generateTempReceiptRef, saveOfflineTransaction } from "../lib/offline.ts";
 import { Button } from "../components/ui/Button.tsx";
 import { Input } from "../components/ui/Input.tsx";
 import { Modal } from "../components/ui/Modal.tsx";
@@ -154,8 +155,60 @@ export default function CashierPage() {
     }
     setProcessing(true);
     setError(null);
+
+    const idempotencyKey = `web-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const tempReceiptRef = generateTempReceiptRef();
+
+    // Mode Offline: Simpan langsung ke IndexedDB jika navigator.onLine false
+    if (!navigator.onLine) {
+      try {
+        await saveOfflineTransaction({
+          tempReceiptRef,
+          idempotencyKey,
+          barberId: selectedBarberId ? selectedBarberId : undefined,
+          customerId: undefined,
+          items: cart.map((c) => ({
+            kind: c.kind,
+            refId: c.refId,
+            quantity: c.quantity,
+            name: c.name,
+            unitPriceIdr: c.priceIdr,
+          })),
+          discountType,
+          discountValue: Number(discountValue),
+          paymentMethod,
+          occurredAt: new Date().toISOString(),
+          subtotalIdr: subtotal,
+          discountIdr: discountAmount,
+          totalIdr: total,
+        });
+
+        // Tampilkan modal struk offline
+        setCreatedReceipt({
+          id: idempotencyKey,
+          receiptNumber: tempReceiptRef,
+          publicToken: "",
+          totals: {
+            subtotalIdr: subtotal,
+            discountIdr: discountAmount,
+            totalIdr: total,
+          },
+        });
+
+        setCart([]);
+        setSelectedBarberId("");
+        setSelectedQueueId("");
+        setDiscountType("none");
+        setDiscountValue(0);
+      } catch (err) {
+        setError("Gagal menyimpan transaksi offline ke memori lokal.");
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+
     try {
-      const idempotencyKey = `web-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
       const payload = {
         barberId: selectedBarberId ? selectedBarberId : undefined,
         queueEntryId: selectedQueueId ? selectedQueueId : undefined,
@@ -180,7 +233,42 @@ export default function CashierPage() {
       setDiscountValue(0);
       void loadData();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal memproses transaksi kasir.");
+      // Jika jaringan gagal di tengah checkout, fallback simpan ke offline queue
+      if (!window.navigator.onLine || (err instanceof TypeError && err.message.includes("fetch"))) {
+        await saveOfflineTransaction({
+          tempReceiptRef,
+          idempotencyKey,
+          barberId: selectedBarberId ? selectedBarberId : undefined,
+          items: cart.map((c) => ({
+            kind: c.kind,
+            refId: c.refId,
+            quantity: c.quantity,
+            name: c.name,
+            unitPriceIdr: c.priceIdr,
+          })),
+          discountType,
+          discountValue: Number(discountValue),
+          paymentMethod,
+          occurredAt: new Date().toISOString(),
+          subtotalIdr: subtotal,
+          discountIdr: discountAmount,
+          totalIdr: total,
+        });
+
+        setCreatedReceipt({
+          id: idempotencyKey,
+          receiptNumber: tempReceiptRef,
+          publicToken: "",
+          totals: {
+            subtotalIdr: subtotal,
+            discountIdr: discountAmount,
+            totalIdr: total,
+          },
+        });
+        setCart([]);
+      } else {
+        setError(err instanceof ApiError ? err.message : "Gagal memproses transaksi kasir.");
+      }
     } finally {
       setProcessing(false);
     }

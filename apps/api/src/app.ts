@@ -9,12 +9,15 @@ import { authRoutes } from "./routes/auth.ts";
 import { barberRoutes } from "./routes/barbers.ts";
 import { commissionRoutes } from "./routes/commissions.ts";
 import { customerRoutes } from "./routes/customers.ts";
+import { expenseRoutes } from "./routes/expenses.ts";
 import { featureRoutes } from "./routes/features.ts";
 import { productRoutes } from "./routes/products.ts";
 import { profileRoutes } from "./routes/profile.ts";
 import { publicRoutes } from "./routes/public.ts";
 import { queueRoutes } from "./routes/queue.ts";
+import { reportRoutes } from "./routes/reports.ts";
 import { serviceRoutes } from "./routes/services.ts";
+import { syncRoutes } from "./routes/sync.ts";
 import { transactionRoutes } from "./routes/transactions.ts";
 import { userRoutes } from "./routes/users.ts";
 
@@ -38,6 +41,9 @@ app.route("/api/queue", queueRoutes);
 app.route("/api/transactions", transactionRoutes);
 app.route("/api/customers", customerRoutes);
 app.route("/api/commissions", commissionRoutes);
+app.route("/api/expenses", expenseRoutes);
+app.route("/api/reports", reportRoutes);
+app.route("/api/sync", syncRoutes);
 app.route("/public", publicRoutes);
 
 app.notFound((c) => c.json({ error: "Alamat tidak ditemukan." }, 404));

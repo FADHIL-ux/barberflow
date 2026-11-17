@@ -214,3 +214,4 @@ customerRoutes.post("/:id/consent", requireRole("owner", "cashier"), async (c) =
 
   return c.json({ ok: true, purpose: input.purpose, isGranted: input.isGranted });
 });
+
