@@ -55,21 +55,18 @@ export default function ReportPage() {
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(val);
 
   const handleClearAllTransactions = async () => {
-    const confirmFirst = window.confirm(
-      "⚠️ PERINGATAN: Anda akan menghapus SELURUH riwayat transaksi dan mereset nomor nota.\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?"
+    const confirmation = window.prompt(
+      "PERINGATAN: Anda akan menghapus SELURUH riwayat transaksi toko dan me-reset nomor struk kembali ke awal.\n\nKetik 'BERSIHKAN' untuk mengonfirmasi:"
     );
-    if (!confirmFirst) return;
-
-    const phrase = window.prompt("Ketik 'BERSIHKAN' untuk mengonfirmasi penghapusan seluruh data transaksi:");
-    if (phrase !== "BERSIHKAN") {
-      alert("Konfirmasi dibatalkan. Data tidak dihapus.");
+    if (confirmation !== "BERSIHKAN") {
+      if (confirmation !== null) alert("Kata konfirmasi salah. Pembersihan riwayat dibatalkan.");
       return;
     }
 
     setClearing(true);
     try {
-      const res = await api.del<{ message: string; deletedCount: number }>("/api/transactions/clear-all");
-      alert(`Berhasil: ${res.message} (${res.deletedCount} transaksi dihapus).`);
+      const res = await api.del<{ message?: string; deletedCount: number }>("/api/transactions/clear-all");
+      alert(res.message ?? `Berhasil membersihkan ${res.deletedCount} transaksi.`);
       await fetchReport(selectedDate);
     } catch (err) {
       alert(err instanceof ApiError ? err.message : "Gagal membersihkan transaksi.");

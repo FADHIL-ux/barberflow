@@ -424,7 +424,7 @@ transactionRoutes.delete("/clear-all", requireRole("owner"), async (c) => {
     return res.rowCount ?? 0;
   });
 
-  return c.json({ ok: true, deletedCount: count });
+  return c.json({ ok: true, message: "Seluruh riwayat transaksi berhasil dibersihkan.", deletedCount: count });
 });
 
 // DELETE /api/transactions/:id -> Hapus transaksi tertentu (Khusus Owner)
@@ -449,6 +449,6 @@ transactionRoutes.delete("/:id", requireRole("owner"), async (c) => {
   });
 
   if (!deleted) throw new HTTPException(404, { message: "Transaksi tidak ditemukan." });
-  return c.json({ ok: true });
+  return c.json({ ok: true, message: "Transaksi berhasil dihapus." });
 });
 
