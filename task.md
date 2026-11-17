@@ -97,15 +97,15 @@
 ### Backend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Route pelanggan: `GET/POST/PATCH /api/customers`, `GET /api/customers/:id/visits` | `feat(api): customer routes` |
-| ⬜ | Route consent: `POST /api/customers/:id/consent` | `feat(api): customer consent` |
+| ✅ | Route pelanggan: `GET/POST/PATCH /api/customers`, `GET /api/customers/:id/visits` | `feat(api): customer routes` |
+| ✅ | Route consent: `POST /api/customers/:id/consent` | `feat(api): customer consent` |
 
 ### Frontend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Halaman daftar pelanggan + pencarian | `feat(web): customer list` |
-| ⬜ | Detail pelanggan: preferensi, kapster favorit, riwayat kunjungan | `feat(web): customer detail` |
-| ⬜ | Dialog consent UU PDP saat tambah/edit pelanggan | `feat(web): pdp consent dialog` |
+| ✅ | Halaman daftar pelanggan + pencarian | `feat(web): customer list` |
+| ✅ | Detail pelanggan: preferensi, kapster favorit, riwayat kunjungan | `feat(web): customer detail` |
+| ✅ | Dialog consent UU PDP saat tambah/edit pelanggan | `feat(web): pdp consent dialog` |
 
 ---
 
@@ -114,16 +114,16 @@
 ### Backend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Route aturan komisi: `GET/POST/PATCH/DELETE /api/commission-rules` (behind `requireFeature`) | `feat(api): commission rule routes` |
-| ⬜ | Kalkulasi komisi otomatis saat `POST /api/transactions` (sudah ada logika di shared) | `feat(api): auto commission on transaction` |
-| ⬜ | `GET /api/commissions/summary?from=&to=&barber_id=` — laporan komisi | `feat(api): commission report` |
-| ⬜ | Unit test: semua kasus kalkulasi komisi (persen, nominal, default vs khusus kapster) | `test(shared): commission edge cases` |
+| ✅ | Route aturan komisi: `GET/POST/PATCH/DELETE /api/commissions/rules` (behind `requireFeature`) | `feat(api): commission rule routes` |
+| ✅ | Kalkulasi komisi otomatis saat `POST /api/transactions` (sudah ada logika di shared) | `feat(api): auto commission on transaction` |
+| ✅ | `GET /api/commissions/summary?from=&to=&barber_id=` — laporan komisi | `feat(api): commission report` |
+| ✅ | Unit test: semua kasus kalkulasi komisi (persen, nominal, default vs khusus kapster) | `test(shared): commission edge cases` |
 
 ### Frontend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Halaman aturan komisi (Pro) | `feat(web): commission rules page` |
-| ⬜ | Laporan komisi per kapster | `feat(web): commission report page` |
+| ✅ | Halaman aturan komisi (Pro) | `feat(web): commission rules page` |
+| ✅ | Laporan komisi per kapster | `feat(web): commission report page` |
 
 ---
 

@@ -87,6 +87,31 @@ export const createTransactionSchema = z.object({
   occurredAt: z.string().datetime({ offset: true }).optional(),
 });
 
+export const customerSchema = z.object({
+  name: z.string().trim().min(1, "Nama pelanggan wajib diisi").max(120),
+  phone: z.string().trim().regex(/^[0-9+]{8,16}$/, "Nomor telepon harus 8-16 digit").nullable().optional(),
+  hairPreference: z.string().trim().max(300).nullable().optional(),
+  favoriteBarberId: z.string().uuid().nullable().optional(),
+  notes: z.string().trim().max(500).nullable().optional(),
+});
+
+export const customerConsentSchema = z.object({
+  purpose: z.enum(["data_processing", "whatsapp_reminder"], {
+    errorMap: () => ({ message: "Tujuan persetujuan tidak valid." }),
+  }),
+  isGranted: z.boolean(),
+});
+
+export const commissionRuleSchema = z.object({
+  serviceId: z.string().uuid("ID layanan tidak valid"),
+  barberId: z.string().uuid("ID kapster tidak valid").nullable().optional(),
+  type: z.enum(["percent", "fixed"], { errorMap: () => ({ message: "Tipe komisi harus persen atau fixed" }) }),
+  value: z.number().min(0, "Nilai komisi minimal 0"),
+}).refine(
+  (data) => (data.type === "percent" ? data.value <= 100 : true),
+  { message: "Komisi persentase maksimal 100%", path: ["value"] }
+);
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ServiceInput = z.infer<typeof serviceSchema>;
@@ -97,3 +122,6 @@ export type InviteUserInput = z.infer<typeof inviteUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type AddQueueEntryInput = z.infer<typeof addQueueEntrySchema>;
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
+export type CustomerInput = z.infer<typeof customerSchema>;
+export type CustomerConsentInput = z.infer<typeof customerConsentSchema>;
+export type CommissionRuleInput = z.infer<typeof commissionRuleSchema>;

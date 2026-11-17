@@ -7,6 +7,8 @@ import { ZodError } from "zod";
 import { env } from "./env.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { barberRoutes } from "./routes/barbers.ts";
+import { commissionRoutes } from "./routes/commissions.ts";
+import { customerRoutes } from "./routes/customers.ts";
 import { featureRoutes } from "./routes/features.ts";
 import { productRoutes } from "./routes/products.ts";
 import { profileRoutes } from "./routes/profile.ts";
@@ -34,6 +36,8 @@ app.route("/api/profile", profileRoutes);
 app.route("/api/features", featureRoutes);
 app.route("/api/queue", queueRoutes);
 app.route("/api/transactions", transactionRoutes);
+app.route("/api/customers", customerRoutes);
+app.route("/api/commissions", commissionRoutes);
 app.route("/public", publicRoutes);
 
 app.notFound((c) => c.json({ error: "Alamat tidak ditemukan." }, 404));

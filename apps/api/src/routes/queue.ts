@@ -176,3 +176,4 @@ queueRoutes.patch("/:id/status", requireRole("owner", "cashier", "barber"), asyn
 
   return c.json({ ok: true, status: updated.status });
 });
+

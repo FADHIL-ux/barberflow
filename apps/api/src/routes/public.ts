@@ -26,3 +26,4 @@ publicRoutes.get("/receipt/:token", async (c) => {
 
   return c.json({ receipt });
 });
+

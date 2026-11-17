@@ -402,3 +402,4 @@ transactionRoutes.post("/", requireRole("owner", "cashier"), async (c) => {
     throw err;
   }
 });
+
