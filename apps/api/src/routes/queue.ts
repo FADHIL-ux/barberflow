@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import { addQueueEntrySchema } from "@barberflow/shared";
 import { writeAudit } from "../audit.ts";
@@ -27,6 +28,30 @@ const updateStatusSchema = z.object({
   status: z.enum(["waiting", "in_service", "done", "cancelled"], {
     errorMap: () => ({ message: "Status antrean tidak valid." }),
   }),
+});
+
+// GET /api/queue/stream -> Server-Sent Events (SSE) untuk update real-time
+queueRoutes.get("/stream", async (c) => {
+  return streamSSE(c, async (stream) => {
+    await stream.writeSSE({
+      event: "connected",
+      data: JSON.stringify({ ok: true, timestamp: new Date().toISOString() }),
+    });
+
+    let active = true;
+    stream.onAbort(() => {
+      active = false;
+    });
+
+    while (active) {
+      await stream.sleep(10000);
+      if (!active) break;
+      await stream.writeSSE({
+        event: "ping",
+        data: JSON.stringify({ time: Date.now() }),
+      });
+    }
+  });
 });
 
 // GET /api/queue/today -> daftar antrean hari ini

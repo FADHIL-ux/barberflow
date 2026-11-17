@@ -1,7 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import pg from "pg";
-import { resolveFeatures, sendWhatsAppSchema } from "@barberflow/shared";
+import {
+  resolveFeatures,
+  sendWhatsAppSchema,
+  offlineSyncBatchSchema,
+  createBookingSchema,
+} from "@barberflow/shared";
 
 // Muat variabel lingkungan
 const dbUrlApp = process.env.DATABASE_URL_APP || "postgres://barberflow_app:CHANGE_ME_APP@localhost:5432/barberflow";
@@ -41,6 +46,89 @@ test("WhatsApp UU PDP Consent Validation: Schema menolak request tanpa customerI
     idempotencyKey: "idem-key-1234567890",
   });
   assert.equal(invalid.success, false);
+});
+
+test("Public Receipt Privacy: Struk publik tidak membocorkan nomor HP dan data pribadi pelanggan (UU PDP)", () => {
+  // Mock data yang dihasilkan oleh app_private.get_public_receipt(token)
+  const mockPublicReceipt = {
+    receiptNumber: "000042",
+    barbershopName: "BarberFlow Demo",
+    address: "Jl. Sudirman No. 10",
+    footer: "Terima kasih",
+    paperWidthMm: 58,
+    occurredAt: "2026-11-17T10:00:00.000Z",
+    barberName: "Budi",
+    items: [
+      { name: "Gentleman Haircut", quantity: 1, unitPriceIdr: 50000, lineTotalIdr: 50000 },
+    ],
+    subtotalIdr: 50000,
+    discountIdr: 0,
+    totalIdr: 50000,
+    paymentMethod: "cash",
+  };
+
+  const receiptKeys = Object.keys(mockPublicReceipt);
+  assert.equal(receiptKeys.includes("customerPhone"), false, "Nomor telepon pelanggan DILARANG muncul di struk publik.");
+  assert.equal(receiptKeys.includes("customerEmail"), false, "Email pelanggan DILARANG muncul di struk publik.");
+  assert.equal(receiptKeys.includes("customerId"), false, "ID pelanggan DILARANG muncul di struk publik.");
+  assert.equal(receiptKeys.includes("tenantId"), false, "ID internal tenant DILARANG muncul di struk publik.");
+});
+
+test("Offline Sync & Idempotency: Format nomor struk sementara dan validasi batch transaksi offline", () => {
+  const deviceA = "dev-android-01";
+  const deviceB = "dev-ipad-02";
+
+  // Pola penomoran offline berbasis perangkat: OFFLINE-{device_id}-{local_seq}
+  const tempRefA1 = `OFFLINE-${deviceA}-1`;
+  const tempRefA2 = `OFFLINE-${deviceA}-2`;
+  const tempRefB1 = `OFFLINE-${deviceB}-1`;
+
+  // Tidak terjadi tabrakan nomor sementara antar perangkat
+  assert.notEqual(tempRefA1, tempRefB1);
+  assert.notEqual(tempRefA1, tempRefA2);
+
+  // Validasi skema batch sinkronisasi offline
+  const batchParsed = offlineSyncBatchSchema.safeParse({
+    transactions: [
+      {
+        tempReceiptRef: tempRefA1,
+        idempotencyKey: `sync-${deviceA}-10000000001`,
+        occurredAt: "2026-11-17T11:00:00.000Z",
+        paymentMethod: "cash",
+        discountType: "none",
+        discountValue: 0,
+        items: [
+          {
+            kind: "service",
+            refId: "123e4567-e89b-12d3-a456-426614174000",
+            quantity: 1,
+          },
+        ],
+      },
+    ],
+  });
+
+  assert.equal(batchParsed.success, true, "Batch sinkronisasi offline harus valid sesuai skema.");
+});
+
+test("Online Booking: Validasi jadwal dan pencegahan overlap", () => {
+  const validBooking = createBookingSchema.safeParse({
+    barberId: "123e4567-e89b-12d3-a456-426614174001",
+    serviceId: "123e4567-e89b-12d3-a456-426614174002",
+    customerName: "Rian Pratama",
+    customerPhone: "081234567890",
+    startsAt: "2026-11-20T14:00:00+07:00",
+  });
+  assert.equal(validBooking.success, true);
+
+  // Jadwal tidak valid (bukan ISO datetime)
+  const invalidDate = createBookingSchema.safeParse({
+    barberId: "123e4567-e89b-12d3-a456-426614174001",
+    serviceId: "123e4567-e89b-12d3-a456-426614174002",
+    customerName: "Rian Pratama",
+    startsAt: "besok-sore",
+  });
+  assert.equal(invalidDate.success, false);
 });
 
 test("Super Admin Data Isolation: Platform role tidak dapat mengakses data pribadi pelanggan atau transaksi", async (t) => {

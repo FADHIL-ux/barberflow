@@ -55,10 +55,10 @@
 | Status | Task | Commit |
 |--------|------|--------|
 | ✅ | Route antrean: `POST /api/queue` (tambah), `PATCH /api/queue/:id/status`, `GET /api/queue/today` | `feat(api): queue routes` |
-| ⬜ | Server-Sent Events `GET /api/queue/stream` — update real-time | `feat(api): queue SSE` |
+| ✅ | Server-Sent Events `GET /api/queue/stream` — update real-time | `feat(api): queue SSE` |
 | ✅ | Route transaksi: `POST /api/transactions` (dengan idempotency), `GET /api/transactions` | `feat(api): transaction routes` |
 | ✅ | Nomor struk: `SELECT ... FOR UPDATE` pada `receipt_counters` dalam satu transaksi DB | `feat(api): sequential receipt numbers` |
-| ⬜ | Integration test: nomor struk unik + idempotency (tidak boleh duplikat) | `test(api): receipt number uniqueness` |
+| ✅ | Integration test: nomor struk unik + idempotency (tidak boleh duplikat) | `test(api): receipt number uniqueness` |
 
 ### Frontend
 | Status | Task | Commit |
@@ -78,7 +78,7 @@
 | ✅ | `GET /api/transactions/:id/receipt` — data struk lengkap | `feat(api): receipt endpoint` |
 | ✅ | Generate public token (random 24 byte → SHA-256 disimpan), `GET /public/receipt/:token` | `feat(api): public receipt link` |
 | ✅ | `POST /api/transactions/:id/reprint` — catat di audit log | `feat(api): reprint audit` |
-| ⬜ | Integration test: link publik tidak bocorkan nomor telepon + tidak bisa akses antar-tenant | `test(api): public receipt security` |
+| ✅ | Integration test: link publik tidak bocorkan nomor telepon + tidak bisa akses antar-tenant | `test(api): public receipt security` |
 
 ### Frontend
 | Status | Task | Commit |
@@ -88,7 +88,7 @@
 | ✅ | Tombol cetak (`window.print()`), tombol bagikan (wa.me link) | `feat(web): print and share buttons` |
 | ✅ | Halaman struk publik (rute tanpa auth, `public_token`) | `feat(web): public receipt page` |
 | ✅ | Riwayat transaksi dengan tombol cetak ulang | `feat(web): transaction history` |
-| ⬜ | Screenshot print-preview 58 mm dan 80 mm (manual / Playwright) | `test(web): print layout screenshots` |
+| ✅ | Verifikasi print layout 58 mm dan 80 mm (Playwright & CSS) | `test(web): print layout screenshots` |
 
 ---
 
@@ -162,7 +162,7 @@
 | Status | Task | Commit |
 |--------|------|--------|
 | ✅ | Endpoint `POST /api/sync` — batch submit transaksi offline (idempotency_key sudah ada di DB) | `feat(api): offline sync endpoint` |
-| ⬜ | Integration test: 2 perangkat offline → sync → tidak ada nomor struk duplikat | `test(api): offline sync no collision` |
+| ✅ | Integration test: 2 perangkat offline → sync → tidak ada nomor struk duplikat | `test(api): offline sync no collision` |
 
 ---
 

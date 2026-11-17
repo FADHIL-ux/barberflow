@@ -68,11 +68,29 @@ export default function QueuePage() {
   useEffect(() => {
     void Promise.all([fetchQueue(), fetchMeta()]).finally(() => setLoading(false));
 
-    // Polling antrean setiap 10 detik
+    // Coba koneksi SSE untuk sinkronisasi real-time antrean
+    let sse: EventSource | null = null;
+    try {
+      sse = new EventSource("/api/queue/stream", { withCredentials: true });
+      sse.addEventListener("ping", () => {
+        void fetchQueue();
+      });
+      sse.onerror = () => {
+        sse?.close();
+      };
+    } catch {
+      // Fallback polling
+    }
+
+    // Polling fallback antrean setiap 15 detik
     const timer = setInterval(() => {
       void fetchQueue();
-    }, 10000);
-    return () => clearInterval(timer);
+    }, 15000);
+
+    return () => {
+      clearInterval(timer);
+      sse?.close();
+    };
   }, []);
 
   const handleAddQueue = async (e: React.FormEvent) => {
