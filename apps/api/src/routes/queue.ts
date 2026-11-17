@@ -202,3 +202,22 @@ queueRoutes.patch("/:id/status", requireRole("owner", "cashier", "barber"), asyn
   return c.json({ ok: true, status: updated.status });
 });
 
+// DELETE /api/queue/done -> Bersihkan daftar antrean yang sudah berstatus 'done' (Khusus Owner)
+queueRoutes.delete("/done", requireRole("owner"), async (c) => {
+  const tenantId = tenantIdOf(c);
+  const auth = c.get("auth");
+
+  const count = await withTenant(tenantId, async (db) => {
+    const res = await db.query(
+      `DELETE FROM queue_entries WHERE tenant_id = $1 AND status = 'done'`,
+      [tenantId],
+    );
+    await writeAudit(db, auth, "queue.clear_done", "tenant", tenantId, {
+      deletedCount: res.rowCount,
+    });
+    return res.rowCount ?? 0;
+  });
+
+  return c.json({ ok: true, message: "Daftar antrean selesai berhasil dibersihkan.", deletedCount: count });
+});
+

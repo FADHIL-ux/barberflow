@@ -403,17 +403,23 @@ transactionRoutes.post("/", requireRole("owner", "cashier"), async (c) => {
   }
 });
 
-// DELETE /api/transactions/clear-all -> Bersihkan seluruh riwayat transaksi tenant & reset counter nota (Khusus Owner)
+// DELETE /api/transactions/clear-all -> Bersihkan seluruh riwayat transaksi tenant & reset counter nota & antrean selesai (Khusus Owner)
 transactionRoutes.delete("/clear-all", requireRole("owner"), async (c) => {
   const tenantId = tenantIdOf(c);
   const auth = c.get("auth");
 
   const count = await withTenant(tenantId, async (db) => {
+    // 1. Hapus transaksi
     const res = await db.query(
       `DELETE FROM transactions WHERE tenant_id = $1`,
       [tenantId],
     );
-    // Reset nomor urut struk kembali ke 0
+    // 2. Hapus antrean yang sudah selesai ('done') agar kolom "Selesai Hari Ini" ikut bersih
+    await db.query(
+      `DELETE FROM queue_entries WHERE tenant_id = $1 AND status = 'done'`,
+      [tenantId],
+    );
+    // 3. Reset nomor urut struk kembali ke 0
     await db.query(
       `UPDATE receipt_counters SET last_number = 0 WHERE tenant_id = $1`,
       [tenantId],
@@ -424,7 +430,7 @@ transactionRoutes.delete("/clear-all", requireRole("owner"), async (c) => {
     return res.rowCount ?? 0;
   });
 
-  return c.json({ ok: true, message: "Seluruh riwayat transaksi berhasil dibersihkan.", deletedCount: count });
+  return c.json({ ok: true, message: "Seluruh riwayat transaksi dan antrean selesai berhasil dibersihkan.", deletedCount: count });
 });
 
 // DELETE /api/transactions/:id -> Hapus transaksi tertentu (Khusus Owner)
@@ -434,14 +440,21 @@ transactionRoutes.delete("/:id", requireRole("owner"), async (c) => {
   const auth = c.get("auth");
 
   const deleted = await withTenant(tenantId, async (db) => {
-    const txRes = await db.query<{ receipt_number: string }>(
-      `SELECT receipt_number::text FROM transactions WHERE id = $1 AND tenant_id = $2`,
+    const txRes = await db.query<{ receipt_number: string; queue_entry_id: string | null }>(
+      `SELECT receipt_number::text, queue_entry_id FROM transactions WHERE id = $1 AND tenant_id = $2`,
       [id, tenantId],
     );
     const tx = txRes.rows[0];
     if (!tx) return false;
 
+    // Hapus transaksi
     await db.query(`DELETE FROM transactions WHERE id = $1 AND tenant_id = $2`, [id, tenantId]);
+
+    // Jika transaksi terhubung dengan antrean, hapus antrean selesai terkait
+    if (tx.queue_entry_id) {
+      await db.query(`DELETE FROM queue_entries WHERE id = $1 AND tenant_id = $2`, [tx.queue_entry_id, tenantId]);
+    }
+
     await writeAudit(db, auth, "transaction.delete", "transaction", id, {
       receiptNumber: tx.receipt_number,
     });
@@ -449,6 +462,6 @@ transactionRoutes.delete("/:id", requireRole("owner"), async (c) => {
   });
 
   if (!deleted) throw new HTTPException(404, { message: "Transaksi tidak ditemukan." });
-  return c.json({ ok: true, message: "Transaksi berhasil dihapus." });
+  return c.json({ ok: true, message: "Transaksi dan antrean terkait berhasil dihapus." });
 });
 

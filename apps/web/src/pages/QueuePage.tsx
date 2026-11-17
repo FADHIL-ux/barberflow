@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api.ts";
+import { useAuth } from "../lib/auth.tsx";
 import { Button } from "../components/ui/Button.tsx";
 import { Input } from "../components/ui/Input.tsx";
 import { Modal } from "../components/ui/Modal.tsx";
@@ -30,6 +31,9 @@ interface BarberOption {
 }
 
 export default function QueuePage() {
+  const { user } = useAuth();
+  const isOwner = user?.role === "owner";
+
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [barbers, setBarbers] = useState<BarberOption[]>([]);
@@ -49,6 +53,16 @@ export default function QueuePage() {
       setQueue(res.items);
     } catch (err) {
       console.error("Gagal memuat antrean:", err);
+    }
+  };
+
+  const handleClearDoneQueue = async () => {
+    if (!window.confirm("Bersihkan seluruh riwayat antrean selesai hari ini?")) return;
+    try {
+      await api.del("/api/queue/done");
+      await fetchQueue();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Gagal membersihkan antrean selesai.");
     }
   };
 
@@ -246,6 +260,16 @@ export default function QueuePage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-zinc-500"></span>
                 Selesai Hari Ini ({doneList.length})
               </span>
+              {isOwner && doneList.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearDoneQueue}
+                  className="text-xs text-red-400 hover:text-red-300 transition-colors font-medium"
+                  title="Bersihkan daftar antrean selesai hari ini"
+                >
+                  Bersihkan
+                </button>
+              )}
             </div>
             <div className="flex-1 space-y-3 mt-4 overflow-y-auto max-h-[65dvh]">
               {doneList.length === 0 ? (
