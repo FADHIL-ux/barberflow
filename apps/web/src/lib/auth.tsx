@@ -28,14 +28,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      const [meRes, featRes] = await Promise.all([
-        api.get<{ user: User }>("/api/auth/me"),
-        api.get<{ features: FeatureSet; plan: string }>("/api/features").catch(() => ({ features: null, plan: null })),
-      ]);
+      const meRes = await api.get<{ user: User }>("/api/auth/me");
+      let featRes: { features: FeatureSet | null; plan: string | null } = { features: null, plan: null };
+      try {
+        featRes = await api.get<{ features: FeatureSet; plan: string }>("/api/features");
+      } catch {
+        // Abaikan jika features gagal diambil
+      }
       setState({
         user: meRes.user,
-        features: (featRes as { features: FeatureSet; plan: string }).features,
-        plan: (featRes as { features: FeatureSet; plan: string }).plan,
+        features: featRes.features,
+        plan: featRes.plan,
         loading: false,
       });
     } catch {
