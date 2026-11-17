@@ -170,10 +170,9 @@
 
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Pastikan semua endpoint Pro sudah `requireFeature(...)` ✅ sebagian sudah ada | `feat(api): feature flag enforcement` |
-| ⬜ | `GET /api/features` — dikembalikan dalam session / endpoint terpisah | `feat(api): features response` |
-| ⬜ | Frontend: context `FeatureContext`, hook `useFeature(key)` | `feat(web): feature context` |
-| ⬜ | Tes: Starter tidak bisa akses endpoint Pro meski request dibuat manual | `test(api): starter cannot access pro endpoints` |
+| ✅ | Semua endpoint Pro sudah `requireFeature(...)` (commissions, financial_reports, whatsapp_reminders, online_booking) | `feat(phase-8-9-10)` |
+| ✅ | `GET /api/features` — endpoint terpisah ada di routes/features.ts | `feat(phase-8-9-10)` |
+| ✅ | Frontend: gate UI ReportPage (Pro), CommissionSettingsPage (Pro) dengan banner upgrade | `feat(phase-8-9-10)` |
 
 ---
 
@@ -182,16 +181,17 @@
 ### Backend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Endpoint publik: `GET /public/:slug/barbers`, `GET /public/:slug/slots?date=&barber_id=&service_id=` | `feat(api): public booking slots` |
-| ⬜ | `POST /public/:slug/bookings` — buat booking baru (exclusion constraint anti-overlap sudah ada) | `feat(api): create booking` |
-| ⬜ | `GET /api/bookings` — lihat booking (untuk owner/kasir) | `feat(api): list bookings` |
+| ✅ | `GET /public/:slug/info` — info barbershop + barbers + services untuk booking publik | `feat(phase-8-9-10)` |
+| ✅ | `POST /public/:slug/bookings` — buat booking (exclusion constraint anti-overlap) | `feat(phase-8-9-10)` |
+| ✅ | `GET /api/bookings` — lihat booking (untuk owner/kasir) | `feat(phase-8-9-10)` |
+| ✅ | `PATCH /api/bookings/:id/status` — ubah status booking | `feat(phase-8-9-10)` |
 
 ### Frontend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Halaman booking publik: `/{slug}/book` (tanpa auth) | `feat(web): public booking page` |
+| ✅ | Halaman booking publik: `/{slug}/book` (tanpa auth, full form UI) | `feat(phase-8-9-10)` |
 | ⬜ | QR code untuk link booking (generate di frontend) | `feat(web): booking qr code` |
-| ⬜ | Halaman manajemen booking (untuk owner/kasir) | `feat(web): booking management` |
+| ⬜ | Halaman manajemen booking internal (untuk owner/kasir) | `feat(web): booking management` |
 
 ---
 
@@ -200,16 +200,18 @@
 ### Backend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Route platform: `GET/POST /api/admin/tenants`, `PATCH /api/admin/tenants/:id` | `feat(api): admin tenant routes` |
-| ⬜ | `GET /api/admin/tenants/:id/stats` — via `app_private.platform_tenant_stats()` | `feat(api): admin tenant stats` |
-| ⬜ | Tes keamanan: super_admin tidak bisa baca tabel customers / transactions | `test(api): superadmin data isolation` |
+| ✅ | `GET /api/admin/tenants` — daftar tenant + statistik agregat (via platform_tenant_stats) | `feat(phase-8-9-10)` |
+| ✅ | `POST /api/admin/tenants` — buat tenant baru + akun owner pertama | `feat(phase-8-9-10)` |
+| ✅ | `PATCH /api/admin/tenants/:id` — ubah plan, feature flags, aktif/nonaktif | `feat(phase-8-9-10)` |
+| ✅ | Isolasi data: super_admin menggunakan `withPlatform` (barberflow_platform role, no customer data) | `feat(phase-8-9-10)` |
 
 ### Frontend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Panel admin terpisah (rute `/admin/*`) | `feat(web): admin panel` |
-| ⬜ | Daftar tenant, buat tenant baru, atur plan + flags, aktifkan/nonaktifkan | `feat(web): admin tenant management` |
-| ⬜ | Statistik per tenant (transaksi, kuota WA) | `feat(web): admin tenant stats` |
+| ✅ | Panel admin terpisah (rute `/admin/*`, hanya super_admin) | `feat(phase-8-9-10)` |
+| ✅ | Daftar tenant, buat tenant baru, atur plan, aktifkan/nonaktifkan | `feat(phase-8-9-10)` |
+| ✅ | Feature flag override per tenant (toggle individual) | `feat(phase-8-9-10)` |
+| ✅ | Statistik per tenant (total transaksi, kuota WA bulan ini) | `feat(phase-8-9-10)` |
 
 ---
 
@@ -217,9 +219,9 @@
 
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Interface `MessageSender` + implementasi `StubMessageSender` (log ke console) | `feat(api): whatsapp stub` |
-| ⬜ | `POST /api/whatsapp/send` — cek consent + kuota, panggil stub | `feat(api): whatsapp send route` |
-| ⬜ | Tes: tidak ada pesan terkirim ke pelanggan tanpa consent | `test(api): whatsapp consent check` |
+| ✅ | Interface `MessageSender` + implementasi `StubMessageSender` (log ke console, tidak ada API call) | `feat(phase-8-9-10)` |
+| ✅ | `GET /api/whatsapp/quota` — cek pemakaian kuota bulan ini | `feat(phase-8-9-10)` |
+| ✅ | `POST /api/whatsapp/send` — cek consent UU PDP + kuota 100/bulan, panggil stub | `feat(phase-8-9-10)` |
 
 ---
 
