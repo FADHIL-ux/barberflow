@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api.ts";
+import { useAuth } from "../lib/auth.tsx";
 import { Button } from "../components/ui/Button.tsx";
 import { Modal } from "../components/ui/Modal.tsx";
 
@@ -41,8 +42,12 @@ interface ReceiptDetail {
 }
 
 export default function TransactionsPage() {
+  const { user } = useAuth();
+  const isOwner = user?.role === "owner";
+
   const [items, setItems] = useState<TransactionItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<ReceiptDetail | null>(null);
 
   const formatRupiah = (val: number) =>
@@ -83,17 +88,70 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleDeleteOne = async (id: string, receiptNumber: string) => {
+    if (!window.confirm(`Hapus transaksi nota #${receiptNumber}? Data komisi dan item terkait juga akan dibersihkan.`)) {
+      return;
+    }
+    try {
+      await api.del(`/api/transactions/${id}`);
+      await fetchTransactions();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Gagal menghapus transaksi.");
+    }
+  };
+
+  const handleClearAll = async () => {
+    const confirmation = window.prompt(
+      "PERINGATAN: Anda akan menghapus SELURUH riwayat transaksi toko dan me-reset nomor struk kembali ke awal.\n\nKetik 'BERSIHKAN' untuk mengonfirmasi:"
+    );
+    if (confirmation !== "BERSIHKAN") {
+      if (confirmation !== null) alert("Kata konfirmasi salah. Pembersihan riwayat dibatalkan.");
+      return;
+    }
+
+    try {
+      setClearing(true);
+      await api.del("/api/transactions/clear-all");
+      alert("Seluruh riwayat transaksi berhasil dibersihkan dan nomor struk telah di-reset ke awal.");
+      await fetchTransactions();
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Gagal membersihkan riwayat transaksi.");
+    } finally {
+      setClearing(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[#f4f4f5]">Riwayat Transaksi</h1>
-        <p className="text-sm text-[#71717a] mt-1">Daftar transaksi kasir dan cetak ulang nota</p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#f4f4f5]">Riwayat Transaksi</h1>
+          <p className="text-sm text-[#71717a] mt-1">Daftar transaksi kasir dan cetak ulang nota</p>
+        </div>
+
+        {/* Tombol Khusus Owner untuk Reset/Bersihkan Transaksi */}
+        {isOwner && items.length > 0 && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={clearing}
+            onClick={() => void handleClearAll()}
+            className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 border border-red-900/50"
+          >
+            {clearing ? "Membersihkan..." : "🗑️ Bersihkan Semua Riwayat"}
+          </Button>
+        )}
       </div>
 
       {loading ? (
         <p className="text-sm text-[#71717a]">Memuat riwayat transaksi...</p>
       ) : items.length === 0 ? (
-        <p className="text-sm text-[#71717a] py-8">Belum ada transaksi tercatat.</p>
+        <div className="bg-[#1a1a20] rounded-2xl border border-[#27272a] p-12 text-center space-y-2">
+          <p className="text-base font-semibold text-[#f4f4f5]">Belum ada riwayat transaksi</p>
+          <p className="text-xs text-[#71717a]">Semua transaksi kasir yang selesai akan tercatat otomatis di sini.</p>
+        </div>
       ) : (
         <div className="bg-[#1a1a20] rounded-2xl border border-[#27272a] overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -135,9 +193,20 @@ export default function TransactionsPage() {
                     {formatRupiah(tx.totalIdr)}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Button variant="ghost" size="sm" onClick={() => void openReceiptModal(tx.id)}>
-                      Lihat Nota
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => void openReceiptModal(tx.id)}>
+                        Lihat Nota
+                      </Button>
+                      {isOwner && (
+                        <button
+                          type="button"
+                          onClick={() => void handleDeleteOne(tx.id, tx.receiptNumber)}
+                          className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-900/20 transition-colors cursor-pointer"
+                        >
+                          Hapus
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
