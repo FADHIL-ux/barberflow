@@ -10,13 +10,17 @@ import { barberRoutes } from "./routes/barbers.ts";
 import { featureRoutes } from "./routes/features.ts";
 import { productRoutes } from "./routes/products.ts";
 import { profileRoutes } from "./routes/profile.ts";
+import { publicRoutes } from "./routes/public.ts";
+import { queueRoutes } from "./routes/queue.ts";
 import { serviceRoutes } from "./routes/services.ts";
+import { transactionRoutes } from "./routes/transactions.ts";
 import { userRoutes } from "./routes/users.ts";
 
 export const app = new Hono();
 
 app.use("*", secureHeaders());
 app.use("/api/*", cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use("/public/*", cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use("/api/*", bodyLimit({ maxSize: 1024 * 1024, onError: (c) => c.json({ error: "Ukuran data terlalu besar." }, 413) }));
 
 app.get("/api/health", (c) => c.json({ status: "ok" }));
@@ -28,6 +32,9 @@ app.route("/api/barbers", barberRoutes);
 app.route("/api/users", userRoutes);
 app.route("/api/profile", profileRoutes);
 app.route("/api/features", featureRoutes);
+app.route("/api/queue", queueRoutes);
+app.route("/api/transactions", transactionRoutes);
+app.route("/public", publicRoutes);
 
 app.notFound((c) => c.json({ error: "Alamat tidak ditemukan." }, 404));
 

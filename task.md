@@ -54,19 +54,19 @@
 ### Backend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Route antrean: `POST /api/queue` (tambah), `PATCH /api/queue/:id/status`, `GET /api/queue/today` | `feat(api): queue routes` |
+| ✅ | Route antrean: `POST /api/queue` (tambah), `PATCH /api/queue/:id/status`, `GET /api/queue/today` | `feat(api): queue routes` |
 | ⬜ | Server-Sent Events `GET /api/queue/stream` — update real-time | `feat(api): queue SSE` |
-| ⬜ | Route transaksi: `POST /api/transactions` (dengan idempotency), `GET /api/transactions` | `feat(api): transaction routes` |
-| ⬜ | Nomor struk: `SELECT ... FOR UPDATE` pada `receipt_counters` dalam satu transaksi DB | `feat(api): sequential receipt numbers` |
+| ✅ | Route transaksi: `POST /api/transactions` (dengan idempotency), `GET /api/transactions` | `feat(api): transaction routes` |
+| ✅ | Nomor struk: `SELECT ... FOR UPDATE` pada `receipt_counters` dalam satu transaksi DB | `feat(api): sequential receipt numbers` |
 | ⬜ | Integration test: nomor struk unik + idempotency (tidak boleh duplikat) | `test(api): receipt number uniqueness` |
 
 ### Frontend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Halaman Antrean: papan kanban (Menunggu / Dilayani / Selesai) | `feat(web): queue board` |
-| ⬜ | Modal tambah antrean: nama pelanggan, kapster, layanan yang akan dikerjakan | `feat(web): add queue entry modal` |
-| ⬜ | Halaman Kasir: pilih item (layanan+produk), input diskon, pilih metode bayar, konfirmasi | `feat(web): cashier page` |
-| ⬜ | Polling / SSE untuk update antrean real-time | `feat(web): queue realtime` |
+| ✅ | Halaman Antrean: papan kanban (Menunggu / Dilayani / Selesai) | `feat(web): queue board` |
+| ✅ | Modal tambah antrean: nama pelanggan, kapster, layanan yang akan dikerjakan | `feat(web): add queue entry modal` |
+| ✅ | Halaman Kasir: pilih item (layanan+produk), input diskon, pilih metode bayar, konfirmasi | `feat(web): cashier page` |
+| ✅ | Polling / SSE untuk update antrean real-time | `feat(web): queue realtime` |
 
 ---
 
@@ -75,19 +75,19 @@
 ### Backend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | `GET /api/transactions/:id/receipt` — data struk lengkap | `feat(api): receipt endpoint` |
-| ⬜ | Generate public token (random 32 byte → SHA-256 disimpan), `GET /public/receipt/:token` | `feat(api): public receipt link` |
-| ⬜ | `POST /api/transactions/:id/reprint` — catat di audit log | `feat(api): reprint audit` |
+| ✅ | `GET /api/transactions/:id/receipt` — data struk lengkap | `feat(api): receipt endpoint` |
+| ✅ | Generate public token (random 24 byte → SHA-256 disimpan), `GET /public/receipt/:token` | `feat(api): public receipt link` |
+| ✅ | `POST /api/transactions/:id/reprint` — catat di audit log | `feat(api): reprint audit` |
 | ⬜ | Integration test: link publik tidak bocorkan nomor telepon + tidak bisa akses antar-tenant | `test(api): public receipt security` |
 
 ### Frontend
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | Komponen struk digital (semua field, layout responsif) | `feat(web): receipt component` |
-| ⬜ | Stylesheet `@media print` — 58 mm dan 80 mm kertas termal | `feat(web): thermal print styles` |
-| ⬜ | Tombol cetak (`window.print()`), tombol bagikan (wa.me link) | `feat(web): print and share buttons` |
-| ⬜ | Halaman struk publik (rute tanpa auth, `public_token`) | `feat(web): public receipt page` |
-| ⬜ | Riwayat transaksi dengan tombol cetak ulang | `feat(web): transaction history` |
+| ✅ | Komponen struk digital (semua field, layout responsif) | `feat(web): receipt component` |
+| ✅ | Stylesheet `@media print` — 58 mm dan 80 mm kertas termal | `feat(web): thermal print styles` |
+| ✅ | Tombol cetak (`window.print()`), tombol bagikan (wa.me link) | `feat(web): print and share buttons` |
+| ✅ | Halaman struk publik (rute tanpa auth, `public_token`) | `feat(web): public receipt page` |
+| ✅ | Riwayat transaksi dengan tombol cetak ulang | `feat(web): transaction history` |
 | ⬜ | Screenshot print-preview 58 mm dan 80 mm (manual / Playwright) | `test(web): print layout screenshots` |
 
 ---
