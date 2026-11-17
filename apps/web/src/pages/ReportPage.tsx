@@ -32,7 +32,9 @@ interface ExpenseItem {
 }
 
 export default function ReportPage() {
-  const { plan } = useAuth();
+  const { user, plan } = useAuth();
+  const isOwner = user?.role === "owner";
+
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [report, setReport] = useState<DailyReportData | null>(null);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
@@ -109,11 +111,11 @@ export default function ReportPage() {
     return (
       <div className="p-8 text-center space-y-4 max-w-md mx-auto min-h-[60dvh] flex flex-col justify-center items-center">
         <div className="w-16 h-16 bg-yellow-900/30 text-yellow-400 rounded-full flex items-center justify-center text-3xl font-bold">
-          ⭐
+          ★
         </div>
         <h2 className="text-xl font-bold text-[#f4f4f5]">Laporan Keuangan Khusus Paket Pro</h2>
         <p className="text-sm text-[#71717a]">
-          Upgrade ke paket Pro untuk mengakses ringkasan omset harian & bulanan, pencatatan biaya operasional, laba bersih otomatis, serta ranking kapster terbaik.
+          Upgrade ke paket Pro untuk mengakses ringkasan omset harian & bulanan, pencatatan biaya operasional, dan riwayat pembayaran pelanggan.
         </p>
       </div>
     );
@@ -121,11 +123,16 @@ export default function ReportPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header Halaman */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#f4f4f5]">Laporan Keuangan & Kinerja</h1>
+          <h1 className="text-2xl font-bold text-[#f4f4f5]">
+            {isOwner ? "Laporan Keuangan & Kinerja" : "Laporan Kasir & Pengeluaran"}
+          </h1>
           <p className="text-sm text-[#71717a] mt-1">
-            Ringkasan omset, beban biaya, laba bersih, dan peringkat layanan terlaris
+            {isOwner
+              ? "Ringkasan omset, beban biaya, laba bersih, dan peringkat layanan terlaris"
+              : "Riwayat pembayaran pelanggan hari ini, omset kasir, dan pencatatan biaya operasional"}
           </p>
         </div>
 
@@ -162,7 +169,7 @@ export default function ReportPage() {
               </div>
             </div>
 
-            {/* Pengeluaran Operasional */}
+            {/* Pengeluaran Toko */}
             <div className="p-5 bg-[#1a1a20] rounded-2xl border border-[#27272a] space-y-2">
               <span className="text-xs font-semibold text-[#71717a] uppercase tracking-wider">
                 Pengeluaran Toko
@@ -171,42 +178,110 @@ export default function ReportPage() {
                 {formatRupiah(report.financials.expensesIdr)}
               </div>
               <p className="text-[11px] text-[#71717a] pt-1 border-t border-[#27272a]">
-                Biaya listrik, sewa, perlengkapan, konsumsi
+                Perlengkapan, konsumsi, dan operasional
               </p>
             </div>
 
-            {/* Komisi Kapster */}
-            <div className="p-5 bg-[#1a1a20] rounded-2xl border border-[#27272a] space-y-2">
-              <span className="text-xs font-semibold text-[#71717a] uppercase tracking-wider">
-                Alokasi Komisi
-              </span>
-              <div className="text-2xl font-black text-yellow-400">
-                {formatRupiah(report.financials.commissionsIdr)}
-              </div>
-              <p className="text-[11px] text-[#71717a] pt-1 border-t border-[#27272a]">
-                Hak komisi staf kapster yang bertugas
-              </p>
-            </div>
+            {/* Jika Owner: Tampilkan Komisi & Laba Bersih */}
+            {isOwner ? (
+              <>
+                {/* Komisi Kapster */}
+                <div className="p-5 bg-[#1a1a20] rounded-2xl border border-[#27272a] space-y-2">
+                  <span className="text-xs font-semibold text-[#71717a] uppercase tracking-wider">
+                    Alokasi Komisi
+                  </span>
+                  <div className="text-2xl font-black text-yellow-400">
+                    {formatRupiah(report.financials.commissionsIdr)}
+                  </div>
+                  <p className="text-[11px] text-[#71717a] pt-1 border-t border-[#27272a]">
+                    Hak komisi staf kapster yang bertugas
+                  </p>
+                </div>
 
-            {/* Laba Bersih */}
-            <div className="p-5 bg-[#1a1a20] rounded-2xl border border-[#27272a] space-y-2">
-              <span className="text-xs font-semibold text-[#71717a] uppercase tracking-wider">
-                Laba Bersih (Profit)
-              </span>
-              <div className={`text-2xl font-black ${report.financials.profitIdr >= 0 ? "text-emerald-400" : "text-red-500"}`}>
-                {formatRupiah(report.financials.profitIdr)}
+                {/* Laba Bersih */}
+                <div className="p-5 bg-[#1a1a20] rounded-2xl border border-[#27272a] space-y-2">
+                  <span className="text-xs font-semibold text-[#71717a] uppercase tracking-wider">
+                    Laba Bersih (Profit)
+                  </span>
+                  <div className={`text-2xl font-black ${report.financials.profitIdr >= 0 ? "text-emerald-400" : "text-red-500"}`}>
+                    {formatRupiah(report.financials.profitIdr)}
+                  </div>
+                  <p className="text-[11px] text-[#71717a] pt-1 border-t border-[#27272a]">
+                    Omset dikurangi pengeluaran & komisi
+                  </p>
+                </div>
+              </>
+            ) : (
+              /* Jika Kasir: Tampilkan Total Transaksi & Status Kas */
+              <div className="p-5 bg-[#1a1a20] rounded-2xl border border-[#27272a] space-y-2 sm:col-span-2">
+                <span className="text-xs font-semibold text-[#71717a] uppercase tracking-wider">
+                  Total Transaksi Kasir
+                </span>
+                <div className="text-2xl font-black text-[#f4f4f5]">
+                  {report.financials.transactionCount} Pelanggan Selesai
+                </div>
+                <p className="text-[11px] text-[#71717a] pt-1 border-t border-[#27272a]">
+                  Semua transaksi tercatat otomatis untuk keperluan tutup kasir harian
+                </p>
               </div>
-              <p className="text-[11px] text-[#71717a] pt-1 border-t border-[#27272a]">
-                Omset dikurangi pengeluaran & komisi
-              </p>
+            )}
+          </div>
+
+          {/* Rincian Metode Pembayaran (Riwayat Pembayaran) */}
+          <div className="bg-[#1a1a20] rounded-2xl border border-[#27272a] p-5 space-y-4">
+            <h2 className="text-base font-bold text-[#f4f4f5]">
+              Riwayat Pembayaran Masuk (Tutup Kasir)
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-4 bg-[#101014] rounded-xl border border-[#27272a] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#71717a]">💵 Tunai (Cash di Laci)</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-900/30 text-emerald-400">
+                    {report.financials.revenueIdr > 0
+                      ? Math.round((report.financials.byPaymentMethod.cash / report.financials.revenueIdr) * 100)
+                      : 0}%
+                  </span>
+                </div>
+                <div className="text-lg font-bold text-[#f4f4f5]">
+                  {formatRupiah(report.financials.byPaymentMethod.cash)}
+                </div>
+              </div>
+
+              <div className="p-4 bg-[#101014] rounded-xl border border-[#27272a] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#71717a]">📱 QRIS (Digital)</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-900/30 text-blue-400">
+                    {report.financials.revenueIdr > 0
+                      ? Math.round((report.financials.byPaymentMethod.qris / report.financials.revenueIdr) * 100)
+                      : 0}%
+                  </span>
+                </div>
+                <div className="text-lg font-bold text-[#f4f4f5]">
+                  {formatRupiah(report.financials.byPaymentMethod.qris)}
+                </div>
+              </div>
+
+              <div className="p-4 bg-[#101014] rounded-xl border border-[#27272a] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#71717a]">🏦 Transfer Bank</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-900/30 text-purple-400">
+                    {report.financials.revenueIdr > 0
+                      ? Math.round((report.financials.byPaymentMethod.transfer / report.financials.revenueIdr) * 100)
+                      : 0}%
+                  </span>
+                </div>
+                <div className="text-lg font-bold text-[#f4f4f5]">
+                  {formatRupiah(report.financials.byPaymentMethod.transfer)}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Grid Ranking Layanan & Kapster */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Grid Layanan Terlaris (dan Kapster jika Owner) */}
+          <div className={`grid grid-cols-1 ${isOwner ? "md:grid-cols-2" : "md:grid-cols-1"} gap-6`}>
             {/* Top Layanan */}
             <div className="bg-[#1a1a20] rounded-2xl border border-[#27272a] p-5 space-y-3">
-              <h2 className="text-base font-bold text-[#f4f4f5]">Layanan Paling Laris</h2>
+              <h2 className="text-base font-bold text-[#f4f4f5]">Layanan Paling Laris Hari Ini</h2>
               {report.topServices.length === 0 ? (
                 <p className="text-xs text-[#71717a] py-6 text-center">Belum ada data pangkas hari ini</p>
               ) : (
@@ -229,33 +304,35 @@ export default function ReportPage() {
               )}
             </div>
 
-            {/* Top Kapster */}
-            <div className="bg-[#1a1a20] rounded-2xl border border-[#27272a] p-5 space-y-3">
-              <h2 className="text-base font-bold text-[#f4f4f5]">Kapster Berkinerja Terbaik</h2>
-              {report.topBarbers.length === 0 ? (
-                <p className="text-xs text-[#71717a] py-6 text-center">Belum ada kapster bertugas hari ini</p>
-              ) : (
-                <div className="divide-y divide-[#27272a]">
-                  {report.topBarbers.map((barber, idx) => (
-                    <div key={barber.key} className="py-2.5 flex justify-between items-center text-sm">
-                      <div className="flex items-center gap-3">
-                        <span className="w-5 h-5 rounded-full bg-[#27272a] text-[#C6FF3D] font-bold text-xs flex items-center justify-center">
-                          {idx + 1}
-                        </span>
-                        <div>
-                          <div className="font-medium text-[#f4f4f5]">{barber.name}</div>
-                          <span className="text-xs text-[#71717a]">{barber.quantity} pelanggan dilayani</span>
+            {/* Top Kapster (Hanya Ditampilkan untuk Pemilik Toko) */}
+            {isOwner && (
+              <div className="bg-[#1a1a20] rounded-2xl border border-[#27272a] p-5 space-y-3">
+                <h2 className="text-base font-bold text-[#f4f4f5]">Kapster Berkinerja Terbaik</h2>
+                {report.topBarbers.length === 0 ? (
+                  <p className="text-xs text-[#71717a] py-6 text-center">Belum ada kapster bertugas hari ini</p>
+                ) : (
+                  <div className="divide-y divide-[#27272a]">
+                    {report.topBarbers.map((barber, idx) => (
+                      <div key={barber.key} className="py-2.5 flex justify-between items-center text-sm">
+                        <div className="flex items-center gap-3">
+                          <span className="w-5 h-5 rounded-full bg-[#27272a] text-[#C6FF3D] font-bold text-xs flex items-center justify-center">
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <div className="font-medium text-[#f4f4f5]">{barber.name}</div>
+                            <span className="text-xs text-[#71717a]">{barber.quantity} pelanggan dilayani</span>
+                          </div>
                         </div>
+                        <span className="font-semibold text-xs text-[#C6FF3D]">{formatRupiah(barber.revenueIdr)}</span>
                       </div>
-                      <span className="font-semibold text-xs text-[#C6FF3D]">{formatRupiah(barber.revenueIdr)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Daftar Catatan Pengeluaran Hari Ini */}
+          {/* Daftar Catatan Pengeluaran Toko */}
           <div className="bg-[#1a1a20] rounded-2xl border border-[#27272a] p-5 space-y-3">
             <h2 className="text-base font-bold text-[#f4f4f5]">Daftar Pengeluaran Toko</h2>
             {expenses.length === 0 ? (
@@ -269,7 +346,7 @@ export default function ReportPage() {
                       <th className="px-4 py-2.5">Kategori</th>
                       <th className="px-4 py-2.5">Deskripsi</th>
                       <th className="px-4 py-2.5">Nominal</th>
-                      <th className="px-4 py-2.5 text-right rounded-r-lg">Aksi</th>
+                      {isOwner && <th className="px-4 py-2.5 text-right rounded-r-lg">Aksi</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#27272a]">
@@ -279,14 +356,16 @@ export default function ReportPage() {
                         <td className="px-4 py-2.5 font-medium text-[#f4f4f5]">{e.category}</td>
                         <td className="px-4 py-2.5 text-[#71717a]">{e.description || "-"}</td>
                         <td className="px-4 py-2.5 font-bold text-red-400">{formatRupiah(e.amountIdr)}</td>
-                        <td className="px-4 py-2.5 text-right">
-                          <button
-                            onClick={() => void handleDeleteExpense(e.id)}
-                            className="text-red-400 hover:text-red-300 font-medium cursor-pointer"
-                          >
-                            Hapus
-                          </button>
-                        </td>
+                        {isOwner && (
+                          <td className="px-4 py-2.5 text-right">
+                            <button
+                              onClick={() => void handleDeleteExpense(e.id)}
+                              className="text-red-400 hover:text-red-300 font-medium cursor-pointer"
+                            >
+                              Hapus
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

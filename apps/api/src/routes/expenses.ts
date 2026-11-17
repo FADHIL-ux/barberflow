@@ -8,7 +8,6 @@ import { authenticate, requireRole, tenantIdOf, type AppEnv } from "../middlewar
 
 export const expenseRoutes = new Hono<AppEnv>();
 expenseRoutes.use("*", authenticate);
-expenseRoutes.use("*", requireRole("owner"));
 
 interface ExpenseRow {
   id: string;
@@ -19,8 +18,8 @@ interface ExpenseRow {
   created_at: string;
 }
 
-// GET /api/expenses -> Daftar pengeluaran operasional
-expenseRoutes.get("/", async (c) => {
+// GET /api/expenses -> Daftar pengeluaran operasional (Owner & Kasir)
+expenseRoutes.get("/", requireRole("owner", "cashier"), async (c) => {
   const tenantId = tenantIdOf(c);
   const rows = await withTenant(tenantId, async (db) => {
     const q = `
@@ -46,8 +45,8 @@ expenseRoutes.get("/", async (c) => {
   });
 });
 
-// POST /api/expenses -> Tambah pengeluaran baru
-expenseRoutes.post("/", async (c) => {
+// POST /api/expenses -> Tambah pengeluaran baru (Owner & Kasir)
+expenseRoutes.post("/", requireRole("owner", "cashier"), async (c) => {
   const tenantId = tenantIdOf(c);
   const auth = c.get("auth");
   const input = await parseBody(c, expenseSchema);
@@ -81,8 +80,8 @@ expenseRoutes.post("/", async (c) => {
   );
 });
 
-// DELETE /api/expenses/:id -> Hapus pengeluaran
-expenseRoutes.delete("/:id", async (c) => {
+// DELETE /api/expenses/:id -> Hapus pengeluaran (Khusus Owner)
+expenseRoutes.delete("/:id", requireRole("owner"), async (c) => {
   const tenantId = tenantIdOf(c);
   const id = parseId(c.req.param("id"));
   const auth = c.get("auth");

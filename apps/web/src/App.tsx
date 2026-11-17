@@ -95,7 +95,14 @@ export default function App() {
               </RequireRole>
             }
           />
-          <Route path="/laporan" element={<ReportPage />} />
+          <Route
+            path="/laporan"
+            element={
+              <RequireRole roles={["owner", "cashier"]}>
+                <ReportPage />
+              </RequireRole>
+            }
+          />
           <Route path="/transaksi" element={<TransactionsPage />} />
           <Route
             path="/pengaturan"

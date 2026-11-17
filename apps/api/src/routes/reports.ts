@@ -11,12 +11,13 @@ import { authenticate, requireFeature, requireRole, tenantIdOf, type AppEnv } fr
 
 export const reportRoutes = new Hono<AppEnv>();
 reportRoutes.use("*", authenticate);
-reportRoutes.use("*", requireRole("owner"));
+reportRoutes.use("*", requireRole("owner", "cashier"));
 reportRoutes.use("*", requireFeature("financial_reports")); // Gatekeeping Pro plan
 
 // GET /api/reports/daily?date=YYYY-MM-DD
 reportRoutes.get("/daily", async (c) => {
   const tenantId = tenantIdOf(c);
+  const auth = c.get("auth");
   const dateStr = c.req.query("date") || new Date().toISOString().slice(0, 10);
 
   const report = await withTenant(tenantId, async (db) => {
@@ -40,20 +41,36 @@ reportRoutes.get("/daily", async (c) => {
       [tenantId, dateStr],
     );
 
-    // 3. Ambil komisi tanggal tersebut
-    const commRes = await db.query<{ total_comm: string }>(
-      `SELECT COALESCE(SUM(ce.amount_idr), 0)::text as total_comm
-       FROM commission_entries ce
-       JOIN transactions t ON t.id = ce.transaction_id AND t.tenant_id = ce.tenant_id
-       WHERE ce.tenant_id = $1 AND t.occurred_at::date = $2::date`,
-      [tenantId, dateStr],
-    );
+    // 3. Ambil komisi tanggal tersebut (hanya untuk owner)
+    let commissionsIdr = 0;
+    if (auth.role === "owner") {
+      const commRes = await db.query<{ total_comm: string }>(
+        `SELECT COALESCE(SUM(ce.amount_idr), 0)::text as total_comm
+         FROM commission_entries ce
+         JOIN transactions t ON t.id = ce.transaction_id AND t.tenant_id = ce.tenant_id
+         WHERE ce.tenant_id = $1 AND t.occurred_at::date = $2::date`,
+        [tenantId, dateStr],
+      );
+      commissionsIdr = Number(commRes.rows[0]?.total_comm || 0);
+    }
 
-    const financials = summarizeFinancials({
+    const rawFinancials = summarizeFinancials({
       transactions: txRes.rows.map((t) => ({ totalIdr: t.total_idr, paymentMethod: t.payment_method })),
       expenses: expRes.rows.map((e) => ({ amountIdr: e.amount_idr })),
-      commissionsIdr: Number(commRes.rows[0]?.total_comm || 0),
+      commissionsIdr,
     });
+
+    // Jika kasir: sembunyikan komisi kapster dan laba bersih rahasia toko
+    const financials = auth.role === "cashier"
+      ? {
+          revenueIdr: rawFinancials.revenueIdr,
+          expensesIdr: rawFinancials.expensesIdr,
+          commissionsIdr: 0,
+          profitIdr: 0,
+          transactionCount: rawFinancials.transactionCount,
+          byPaymentMethod: rawFinancials.byPaymentMethod,
+        }
+      : rawFinancials;
 
     // 4. Layanan terlaris hari ini
     const topServicesRes = await db.query<{
@@ -80,30 +97,33 @@ reportRoutes.get("/daily", async (c) => {
       5,
     );
 
-    // 5. Kapster terbaik hari ini
-    const topBarbersRes = await db.query<{
-      barber_id: string;
-      barber_name: string;
-      quantity: number;
-      revenue_idr: number;
-    }>(
-      `SELECT t.barber_id, b.display_name as barber_name, COUNT(t.id)::int as quantity, SUM(t.total_idr)::int as revenue_idr
-       FROM transactions t
-       JOIN barbers b ON b.id = t.barber_id AND b.tenant_id = t.tenant_id
-       WHERE t.tenant_id = $1 AND t.occurred_at::date = $2::date
-       GROUP BY t.barber_id, b.display_name`,
-      [tenantId, dateStr],
-    );
+    // 5. Kapster terbaik hari ini (hanya ditampilkan untuk owner)
+    let topBarbers: RankedEntry[] = [];
+    if (auth.role === "owner") {
+      const topBarbersRes = await db.query<{
+        barber_id: string;
+        barber_name: string;
+        quantity: number;
+        revenue_idr: number;
+      }>(
+        `SELECT t.barber_id, b.display_name as barber_name, COUNT(t.id)::int as quantity, SUM(t.total_idr)::int as revenue_idr
+         FROM transactions t
+         JOIN barbers b ON b.id = t.barber_id AND b.tenant_id = t.tenant_id
+         WHERE t.tenant_id = $1 AND t.occurred_at::date = $2::date
+         GROUP BY t.barber_id, b.display_name`,
+        [tenantId, dateStr],
+      );
 
-    const topBarbers = rankTop(
-      topBarbersRes.rows.map((b) => ({
-        key: b.barber_id,
-        name: b.barber_name,
-        quantity: b.quantity,
-        revenueIdr: b.revenue_idr,
-      })),
-      5,
-    );
+      topBarbers = rankTop(
+        topBarbersRes.rows.map((b) => ({
+          key: b.barber_id,
+          name: b.barber_name,
+          quantity: b.quantity,
+          revenueIdr: b.revenue_idr,
+        })),
+        5,
+      );
+    }
 
     return {
       date: dateStr,
@@ -119,6 +139,7 @@ reportRoutes.get("/daily", async (c) => {
 // GET /api/reports/monthly?year=YYYY&month=M
 reportRoutes.get("/monthly", async (c) => {
   const tenantId = tenantIdOf(c);
+  const auth = c.get("auth");
   const now = new Date();
   const year = parseInt(c.req.query("year") || String(now.getFullYear()), 10);
   const month = parseInt(c.req.query("month") || String(now.getMonth() + 1), 10);
@@ -148,22 +169,37 @@ reportRoutes.get("/monthly", async (c) => {
       [tenantId, year, month],
     );
 
-    // 3. Komisi bulan ini
-    const commRes = await db.query<{ total_comm: string }>(
-      `SELECT COALESCE(SUM(ce.amount_idr), 0)::text as total_comm
-       FROM commission_entries ce
-       JOIN transactions t ON t.id = ce.transaction_id AND t.tenant_id = ce.tenant_id
-       WHERE ce.tenant_id = $1
-         AND EXTRACT(YEAR FROM t.occurred_at) = $2
-         AND EXTRACT(MONTH FROM t.occurred_at) = $3`,
-      [tenantId, year, month],
-    );
+    // 3. Komisi bulan ini (hanya untuk owner)
+    let commissionsIdr = 0;
+    if (auth.role === "owner") {
+      const commRes = await db.query<{ total_comm: string }>(
+        `SELECT COALESCE(SUM(ce.amount_idr), 0)::text as total_comm
+         FROM commission_entries ce
+         JOIN transactions t ON t.id = ce.transaction_id AND t.tenant_id = ce.tenant_id
+         WHERE ce.tenant_id = $1
+           AND EXTRACT(YEAR FROM t.occurred_at) = $2
+           AND EXTRACT(MONTH FROM t.occurred_at) = $3`,
+        [tenantId, year, month],
+      );
+      commissionsIdr = Number(commRes.rows[0]?.total_comm || 0);
+    }
 
-    const financials = summarizeFinancials({
+    const rawFinancials = summarizeFinancials({
       transactions: txRes.rows.map((t) => ({ totalIdr: t.total_idr, paymentMethod: t.payment_method })),
       expenses: expRes.rows.map((e) => ({ amountIdr: e.amount_idr })),
-      commissionsIdr: Number(commRes.rows[0]?.total_comm || 0),
+      commissionsIdr,
     });
+
+    const financials = auth.role === "cashier"
+      ? {
+          revenueIdr: rawFinancials.revenueIdr,
+          expensesIdr: rawFinancials.expensesIdr,
+          commissionsIdr: 0,
+          profitIdr: 0,
+          transactionCount: rawFinancials.transactionCount,
+          byPaymentMethod: rawFinancials.byPaymentMethod,
+        }
+      : rawFinancials;
 
     // 4. Layanan terlaris bulanan
     const topServicesRes = await db.query<{
@@ -192,32 +228,35 @@ reportRoutes.get("/monthly", async (c) => {
       5,
     );
 
-    // 5. Kapster terbaik bulanan
-    const topBarbersRes = await db.query<{
-      barber_id: string;
-      barber_name: string;
-      quantity: number;
-      revenue_idr: number;
-    }>(
-      `SELECT t.barber_id, b.display_name as barber_name, COUNT(t.id)::int as quantity, SUM(t.total_idr)::int as revenue_idr
-       FROM transactions t
-       JOIN barbers b ON b.id = t.barber_id AND b.tenant_id = t.tenant_id
-       WHERE t.tenant_id = $1
-         AND EXTRACT(YEAR FROM t.occurred_at) = $2
-         AND EXTRACT(MONTH FROM t.occurred_at) = $3
-       GROUP BY t.barber_id, b.display_name`,
-      [tenantId, year, month],
-    );
+    // 5. Kapster terbaik bulanan (hanya untuk owner)
+    let topBarbers: RankedEntry[] = [];
+    if (auth.role === "owner") {
+      const topBarbersRes = await db.query<{
+        barber_id: string;
+        barber_name: string;
+        quantity: number;
+        revenue_idr: number;
+      }>(
+        `SELECT t.barber_id, b.display_name as barber_name, COUNT(t.id)::int as quantity, SUM(t.total_idr)::int as revenue_idr
+         FROM transactions t
+         JOIN barbers b ON b.id = t.barber_id AND b.tenant_id = t.tenant_id
+         WHERE t.tenant_id = $1
+           AND EXTRACT(YEAR FROM t.occurred_at) = $2
+           AND EXTRACT(MONTH FROM t.occurred_at) = $3
+         GROUP BY t.barber_id, b.display_name`,
+        [tenantId, year, month],
+      );
 
-    const topBarbers = rankTop(
-      topBarbersRes.rows.map((b) => ({
-        key: b.barber_id,
-        name: b.barber_name,
-        quantity: b.quantity,
-        revenueIdr: b.revenue_idr,
-      })),
-      5,
-    );
+      topBarbers = rankTop(
+        topBarbersRes.rows.map((b) => ({
+          key: b.barber_id,
+          name: b.barber_name,
+          quantity: b.quantity,
+          revenueIdr: b.revenue_idr,
+        })),
+        5,
+      );
+    }
 
     return {
       year,
