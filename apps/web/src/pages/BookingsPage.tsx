@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, ApiError } from "../lib/api.ts";
 import { Badge } from "../components/ui/Badge.tsx";
 import { Button } from "../components/ui/Button.tsx";
@@ -38,6 +39,7 @@ interface BarberOption {
 type FilterTab = "all" | "upcoming" | "done" | "cancelled";
 
 export default function BookingsPage() {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [barbers, setBarbers] = useState<BarberOption[]>([]);
@@ -177,6 +179,24 @@ export default function BookingsPage() {
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  // Navigasi ke halaman kasir dengan data booking ter-prefill
+  const handlePayAtCashier = (booking: BookingItem) => {
+    const svc = services.find((s) => s.id === booking.service_id);
+    sessionStorage.setItem(
+      "prefillFromBooking",
+      JSON.stringify({
+        bookingId: booking.id,
+        customerName: booking.customer_name,
+        barberId: booking.barber_id,
+        barberName: booking.barber_name,
+        serviceId: booking.service_id,
+        serviceName: booking.service_name,
+        servicePriceIdr: svc?.priceIdr ?? 0,
+      })
+    );
+    navigate("/kasir");
   };
 
   const calculateEstimatedEnd = (startLocal: string, serviceId: string) => {
@@ -391,9 +411,9 @@ export default function BookingsPage() {
                         size="sm"
                         className="flex-1 text-xs"
                         disabled={isUpdating}
-                        onClick={() => void handleUpdateStatus(booking.id, "done")}
+                        onClick={() => handlePayAtCashier(booking)}
                       >
-                        {isUpdating ? "Memproses..." : "Tandai Selesai"}
+                        💳 Bayar di Kasir
                       </Button>
                       <Button
                         variant="ghost"
@@ -411,7 +431,7 @@ export default function BookingsPage() {
                     </>
                   ) : (
                     <span className="text-xs text-[#71717a]">
-                      {booking.status === "done" ? "✓ Telah selesai" : "✗ Telah dibatalkan"}
+                      {booking.status === "done" ? "✓ Telah selesai & dibayar" : "✗ Telah dibatalkan"}
                     </span>
                   )}
                   <Button

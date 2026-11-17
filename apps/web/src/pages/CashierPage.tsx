@@ -34,6 +34,17 @@ interface CartItem {
   quantity: number;
 }
 
+// Data prefill dari halaman Booking
+interface BookingPrefill {
+  bookingId: string;
+  customerName: string;
+  barberId: string;
+  barberName: string;
+  serviceId: string;
+  serviceName: string;
+  servicePriceIdr: number;
+}
+
 interface CreatedReceipt {
   id: string;
   receiptNumber: string;
@@ -55,6 +66,9 @@ export default function CashierPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedBarberId, setSelectedBarberId] = useState<string>("");
   const [selectedQueueId, setSelectedQueueId] = useState<string>("");
+
+  // Booking prefill state
+  const [bookingPrefill, setBookingPrefill] = useState<BookingPrefill | null>(null);
 
   // Discount & Payment
   const [discountType, setDiscountType] = useState<"none" | "percent" | "fixed">("none");
@@ -97,6 +111,33 @@ export default function CashierPage() {
   useEffect(() => {
     void loadData();
   }, []);
+
+  // Baca prefill dari booking setelah data dimuat
+  useEffect(() => {
+    if (loading) return;
+    const raw = sessionStorage.getItem("prefillFromBooking");
+    if (!raw) return;
+    try {
+      const prefill = JSON.parse(raw) as BookingPrefill;
+      setBookingPrefill(prefill);
+      if (prefill.barberId) setSelectedBarberId(prefill.barberId);
+      if (prefill.serviceId && prefill.serviceName) {
+        const matchedItem = items.find((i) => i.id === prefill.serviceId && i.kind === "service");
+        setCart([
+          {
+            kind: "service",
+            refId: prefill.serviceId,
+            name: prefill.serviceName,
+            priceIdr: matchedItem?.priceIdr ?? prefill.servicePriceIdr,
+            quantity: 1,
+          },
+        ]);
+      }
+      sessionStorage.removeItem("prefillFromBooking");
+    } catch {
+      sessionStorage.removeItem("prefillFromBooking");
+    }
+  }, [loading, items]);
 
   const addToCart = (item: ItemOption) => {
     setCart((prev) => {
@@ -225,6 +266,16 @@ export default function CashierPage() {
 
       const res = await api.post<CreatedReceipt>("/api/transactions", payload);
       setCreatedReceipt(res);
+      // Jika transaksi dari booking, update status booking → done
+      if (bookingPrefill?.bookingId) {
+        try {
+          await api.patch(`/api/bookings/${bookingPrefill.bookingId}/status`, { status: "done" });
+        } catch {
+          // Gagal update booking status bukan masalah kritis, transaksi sudah tersimpan
+          console.warn("Gagal update status booking setelah pembayaran.");
+        }
+        setBookingPrefill(null);
+      }
       // Reset form kasir
       setCart([]);
       setSelectedBarberId("");
@@ -280,6 +331,28 @@ export default function CashierPage() {
         <h1 className="text-2xl font-bold text-[#f4f4f5]">Kasir Pembayaran</h1>
         <p className="text-sm text-[#71717a] mt-1">Pilih item, catat metode bayar, dan buat struk digital</p>
       </div>
+
+      {/* Banner info booking yang sedang diproses */}
+      {bookingPrefill && (
+        <div className="p-4 bg-blue-900/30 border border-blue-700 rounded-2xl flex items-start gap-3">
+          <span className="text-2xl">📋</span>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-blue-300">Pembayaran dari Booking</p>
+            <p className="text-xs text-blue-400 mt-0.5">
+              Pelanggan: <span className="font-semibold text-[#f4f4f5]">{bookingPrefill.customerName}</span>
+              {" · "}Layanan: <span className="font-semibold text-[#f4f4f5]">{bookingPrefill.serviceName}</span>
+              {" · "}Kapster: <span className="font-semibold text-[#f4f4f5]">{bookingPrefill.barberName}</span>
+            </p>
+            <p className="text-xs text-blue-500 mt-1">Keranjang sudah diisi otomatis. Konfirmasi pembayaran dan klik "Bayar &amp; Cetak Struk".</p>
+          </div>
+          <button
+            onClick={() => setBookingPrefill(null)}
+            className="text-blue-500 hover:text-blue-300 text-lg leading-none cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-sm text-[#71717a]">Memuat katalog kasir...</p>
