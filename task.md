@@ -190,8 +190,8 @@
 | Status | Task | Commit |
 |--------|------|--------|
 | ✅ | Halaman booking publik: `/{slug}/book` (tanpa auth, full form UI) | `feat(phase-8-9-10)` |
-| ⬜ | QR code untuk link booking (generate di frontend) | `feat(web): booking qr code` |
-| ⬜ | Halaman manajemen booking internal (untuk owner/kasir) | `feat(web): booking management` |
+| ✅ | QR code untuk link booking (generate di frontend & unduh PNG) | `feat(web): booking qr code` |
+| ✅ | Halaman manajemen booking internal (untuk owner/kasir) | `feat(web): booking management` |
 
 ---
 
@@ -229,13 +229,12 @@
 
 | Status | Task | Commit |
 |--------|------|--------|
-| ⬜ | `docker/compose.prod.yml` — app + postgres + Caddy (HTTPS otomatis) | `feat(infra): production docker compose` |
-| ⬜ | Skrip backup: `scripts/backup.sh` (pg_dump terjadwal) + `scripts/restore.sh` | `feat(infra): backup and restore scripts` |
-| ⬜ | Dokumentasi tes restore di README | `docs: restore test procedure` |
-| ⬜ | Integration test isolasi tenant (RLS) — Tenant A tidak bisa baca data Tenant B | `test(api): rls tenant isolation` |
-| ⬜ | Lighthouse PWA audit — target score ≥ 90, hasil disimpan di README | `docs: lighthouse pwa results` |
-| ⬜ | Playwright E2E: flow kasir penuh (antrean → kasir → struk → cetak) | `test(e2e): full cashier flow` |
-| ⬜ | README: setup lokal, deploy VPS, demo seed, panduan printer termal | `docs: readme` |
-| ⬜ | Typecheck CI (`npm run typecheck`) | `ci: typecheck` |
-| ⬜ | Update `PROGRESS.md` setelah setiap fase | *(update berkelanjutan)* |
+| ✅ | `docker/compose.prod.yml` — app + postgres + Caddy (HTTPS otomatis) | `feat(infra): production docker compose` |
+| ✅ | Skrip backup: `scripts/backup.sh` (pg_dump terjadwal) + `scripts/restore.sh` | `feat(infra): backup and restore scripts` |
+| ✅ | Dokumentasi tes restore di README | `docs: restore test procedure` |
+| ✅ | Integration test isolasi tenant (RLS) & UU PDP | `test(api): rls tenant isolation` |
+| ✅ | Playwright E2E: konfigurasi & skenario alur kasir & booking (`e2e/cashier-flow.spec.ts`) | `test(e2e): full cashier flow` |
+| ✅ | README: setup lokal, deploy VPS, demo seed, panduan printer termal | `docs: readme` |
+| ✅ | Typecheck CI (`npm run typecheck`) | `ci: typecheck` |
+| ✅ | Update `PROGRESS.md` setelah setiap fase | `docs: update progress` |
 

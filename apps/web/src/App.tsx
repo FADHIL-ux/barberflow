@@ -21,6 +21,7 @@ const CommissionSettingsPage = lazy(() => import("./pages/settings/CommissionSet
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout.tsx"));
 const PublicReceiptPage = lazy(() => import("./pages/PublicReceiptPage.tsx"));
 const PublicBookingPage = lazy(() => import("./pages/PublicBookingPage.tsx"));
+const BookingsPage = lazy(() => import("./pages/BookingsPage.tsx"));
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -86,6 +87,14 @@ export default function App() {
             }
           />
           <Route path="/pelanggan" element={<CustomersPage />} />
+          <Route
+            path="/booking"
+            element={
+              <RequireRole roles={["owner", "cashier"]}>
+                <BookingsPage />
+              </RequireRole>
+            }
+          />
           <Route path="/laporan" element={<ReportPage />} />
           <Route path="/transaksi" element={<TransactionsPage />} />
           <Route

@@ -9,14 +9,14 @@ export const profileRoutes = new Hono<AppEnv>();
 profileRoutes.use("*", authenticate);
 
 interface ProfileRow {
-  name: string; address: string; phone: string | null; receipt_footer: string; paper_width_mm: number;
+  name: string; slug: string; address: string; phone: string | null; receipt_footer: string; paper_width_mm: number;
   open_time: string; close_time: string;
 }
-const SELECT = `SELECT t.name, p.address, p.phone, p.receipt_footer, p.paper_width_mm,
+const SELECT = `SELECT t.name, t.slug, p.address, p.phone, p.receipt_footer, p.paper_width_mm,
                        to_char(p.open_time, 'HH24:MI') AS open_time, to_char(p.close_time, 'HH24:MI') AS close_time
                 FROM tenants t JOIN tenant_profiles p ON p.tenant_id = t.id`;
 const toDto = (r: ProfileRow) => ({
-  name: r.name, address: r.address, phone: r.phone, receiptFooter: r.receipt_footer,
+  name: r.name, slug: r.slug, address: r.address, phone: r.phone, receiptFooter: r.receipt_footer,
   paperWidthMm: r.paper_width_mm, openTime: r.open_time, closeTime: r.close_time,
 });
 

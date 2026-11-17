@@ -1,0 +1,22 @@
+{$DOMAIN:localhost} {
+    encode gzip zstd
+
+    # API and public endpoints routed to backend Hono
+    handle /api/* {
+        reverse_proxy api:3000
+    }
+
+    handle /public/* {
+        reverse_proxy api:3000
+    }
+
+    # All frontend SPA routes routed to web container
+    handle {
+        reverse_proxy web:80
+    }
+
+    log {
+        output stdout
+        format console
+    }
+}
