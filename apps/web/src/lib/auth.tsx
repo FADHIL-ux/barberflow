@@ -16,7 +16,7 @@ export interface AuthState {
 }
 
 export interface AuthContextValue extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       plan: (featRes as { features: FeatureSet; plan: string }).plan,
       loading: false,
     });
+    return res.user;
   }, []);
 
   const logout = useCallback(async () => {

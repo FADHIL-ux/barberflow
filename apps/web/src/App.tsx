@@ -42,6 +42,12 @@ function RequireRole({ roles, children }: { roles: string[]; children: React.Rea
   return <>{children}</>;
 }
 
+function DefaultIndexRoute() {
+  const { user } = useAuth();
+  if (user?.role === "super_admin") return <Navigate to="/admin" replace />;
+  return <Navigate to="/antrian" replace />;
+}
+
 export default function App() {
   const { user, loading } = useAuth();
 
@@ -76,7 +82,7 @@ export default function App() {
             </RequireAuth>
           }
         >
-          <Route index element={<Navigate to="/antrian" replace />} />
+          <Route index element={<DefaultIndexRoute />} />
           <Route path="/antrian" element={<QueuePage />} />
           <Route
             path="/kasir"
@@ -120,6 +126,14 @@ export default function App() {
             <Route path="pengguna" element={<UsersSettingsPage />} />
             <Route path="komisi" element={<CommissionSettingsPage />} />
           </Route>
+          <Route
+            path="/admin"
+            element={
+              <RequireRole roles={["super_admin"]}>
+                <AdminLayout />
+              </RequireRole>
+            }
+          />
           <Route
             path="/admin/*"
             element={

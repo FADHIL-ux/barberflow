@@ -18,8 +18,12 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await login(email, password);
-      navigate("/antrian");
+      const user = await login(email, password);
+      if (user.role === "super_admin") {
+        navigate("/admin");
+      } else {
+        navigate("/antrian");
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Terjadi kesalahan. Silakan coba lagi.");
     } finally {
