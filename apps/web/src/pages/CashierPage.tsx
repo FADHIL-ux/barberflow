@@ -236,20 +236,12 @@ export default function CashierPage() {
           },
         });
 
-  
-      // After successful transaction, refresh queue to update "Selesai Hari Ini"
-      await fetchQueue();
-      setCart([]);
-      setSelectedBarberId("");
-      setSelectedQueueId("");
-      setDiscountType("none");
-      setDiscountValue(0);
-      void loadData();
-
+        setCart([]);
         setSelectedBarberId("");
         setSelectedQueueId("");
         setDiscountType("none");
         setDiscountValue(0);
+        void loadData();
       } catch (err) {
         setError("Gagal menyimpan transaksi offline ke memori lokal.");
       } finally {
@@ -285,36 +277,13 @@ export default function CashierPage() {
         }
         setBookingPrefill(null);
       }
-      // Reset form kasir
-
-      // After successful transaction, refresh queue to update "Selesai Hari Ini"
-      await fetchQueue();
-      setCart([]);
-      setSelectedBarberId("");
-      setSelectedQueueId("");
-      setDiscountType("none");
-      setDiscountValue(0);
-      void loadData();
-
-      setSelectedBarberId("");
-      setSelectedQueueId("");
-      setDiscountType("none");
-      setDiscountValue(0);
       // If datang dari antrean, tandai antrean selesai secara otomatis
       if (selectedQueueId) {
         void api.patch(`/api/queue/${selectedQueueId}/status`, { status: "done" });
       }
-      void loadData();
 
-      // After successful transaction, refresh queue to update "Selesai Hari Ini"
-      await fetchQueue();
+      // Reset form kasir
       setCart([]);
-      setSelectedBarberId("");
-      setSelectedQueueId("");
-      setDiscountType("none");
-      setDiscountValue(0);
-      void loadData();
-
       setSelectedBarberId("");
       setSelectedQueueId("");
       setDiscountType("none");
@@ -353,15 +322,12 @@ export default function CashierPage() {
             totalIdr: total,
           },
         });
-  
-      // After successful transaction, refresh queue to update "Selesai Hari Ini"
-      await fetchQueue();
-      setCart([]);
-      setSelectedBarberId("");
-      setSelectedQueueId("");
-      setDiscountType("none");
-      setDiscountValue(0);
-      void loadData();
+        setCart([]);
+        setSelectedBarberId("");
+        setSelectedQueueId("");
+        setDiscountType("none");
+        setDiscountValue(0);
+        void loadData();
 
       } else {
         setError(err instanceof ApiError ? err.message : "Gagal memproses transaksi kasir.");
