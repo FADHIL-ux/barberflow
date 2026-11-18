@@ -5,6 +5,7 @@ import { HTTPException } from "hono/http-exception";
 import { secureHeaders } from "hono/secure-headers";
 import { ZodError } from "zod";
 import { env } from "./env.ts";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { adminRoutes } from "./routes/admin.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { barberRoutes } from "./routes/barbers.ts";
@@ -51,6 +52,16 @@ app.route("/api/whatsapp", whatsappRoutes);
 app.route("/api/bookings", bookingRoutes);
 app.route("/api/admin", adminRoutes);
 app.route("/public", publicRoutes);
+
+// Static assets from built frontend SPA
+app.use("/*", serveStatic({ root: "./apps/web/dist" }));
+// SPA fallback for frontend routes (non-API)
+app.get("*", (c, next) => {
+  if (c.req.path.startsWith("/api/") || c.req.path.startsWith("/public/")) {
+    return c.json({ error: "Alamat tidak ditemukan." }, 404);
+  }
+  return serveStatic({ path: "./apps/web/dist/index.html" })(c, next);
+});
 
 app.notFound((c) => c.json({ error: "Alamat tidak ditemukan." }, 404));
 
