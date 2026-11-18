@@ -1,4 +1,4 @@
-"react";
+import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api.ts";
 import { generateTempReceiptRef, saveOfflineTransaction } from "../lib/offline.ts";
 import { Button } from "../components/ui/Button.tsx";
