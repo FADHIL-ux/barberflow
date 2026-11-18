@@ -34,6 +34,7 @@ export default function QueuePage() {
   const { user } = useAuth();
   const isOwner = user?.role === "owner";
 
+
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [barbers, setBarbers] = useState<BarberOption[]>([]);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+"react";
 import { api, ApiError } from "../lib/api.ts";
 import { generateTempReceiptRef, saveOfflineTransaction } from "../lib/offline.ts";
 import { Button } from "../components/ui/Button.tsx";
@@ -236,7 +236,16 @@ export default function CashierPage() {
           },
         });
 
-        setCart([]);
+  
+      // After successful transaction, refresh queue to update "Selesai Hari Ini"
+      await fetchQueue();
+      setCart([]);
+      setSelectedBarberId("");
+      setSelectedQueueId("");
+      setDiscountType("none");
+      setDiscountValue(0);
+      void loadData();
+
         setSelectedBarberId("");
         setSelectedQueueId("");
         setDiscountType("none");
@@ -277,7 +286,35 @@ export default function CashierPage() {
         setBookingPrefill(null);
       }
       // Reset form kasir
+
+      // After successful transaction, refresh queue to update "Selesai Hari Ini"
+      await fetchQueue();
       setCart([]);
+      setSelectedBarberId("");
+      setSelectedQueueId("");
+      setDiscountType("none");
+      setDiscountValue(0);
+      void loadData();
+
+      setSelectedBarberId("");
+      setSelectedQueueId("");
+      setDiscountType("none");
+      setDiscountValue(0);
+      // If datang dari antrean, tandai antrean selesai secara otomatis
+      if (selectedQueueId) {
+        void api.patch(`/api/queue/${selectedQueueId}/status`, { status: "done" });
+      }
+      void loadData();
+
+      // After successful transaction, refresh queue to update "Selesai Hari Ini"
+      await fetchQueue();
+      setCart([]);
+      setSelectedBarberId("");
+      setSelectedQueueId("");
+      setDiscountType("none");
+      setDiscountValue(0);
+      void loadData();
+
       setSelectedBarberId("");
       setSelectedQueueId("");
       setDiscountType("none");
@@ -316,7 +353,16 @@ export default function CashierPage() {
             totalIdr: total,
           },
         });
-        setCart([]);
+  
+      // After successful transaction, refresh queue to update "Selesai Hari Ini"
+      await fetchQueue();
+      setCart([]);
+      setSelectedBarberId("");
+      setSelectedQueueId("");
+      setDiscountType("none");
+      setDiscountValue(0);
+      void loadData();
+
       } else {
         setError(err instanceof ApiError ? err.message : "Gagal memproses transaksi kasir.");
       }
