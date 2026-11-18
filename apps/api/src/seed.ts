@@ -30,6 +30,22 @@ export async function runMigrationsAndSeed() {
   try {
     await client.connect();
 
+    // 0. Pastikan role database aplikasi sudah ada
+    console.log("Memastikan role barberflow_app dan barberflow_platform...");
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'barberflow_app') THEN
+          CREATE ROLE barberflow_app LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'barberflow_platform') THEN
+          CREATE ROLE barberflow_platform LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+        END IF;
+      END
+      $$;
+      GRANT USAGE ON SCHEMA public TO barberflow_app, barberflow_platform;
+    `);
+
     // 1. Jalankan Migrasi Database jika tabel belum ada
     const dir = getMigrationsDir();
     if (dir) {
