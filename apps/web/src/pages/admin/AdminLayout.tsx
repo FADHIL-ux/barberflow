@@ -182,15 +182,16 @@ export default function AdminLayout() {
 
                   {/* Tombol Aktif/Nonaktif */}
                   <button
+                    type="button"
                     onClick={() => void patchTenant(tenant.id, { isActive: !tenant.isActive })}
                     disabled={isLoading}
-                    className={`text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors ${
+                    className={`text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors cursor-pointer ${
                       tenant.isActive
                         ? "border-red-800 text-red-400 hover:bg-red-900/20"
                         : "border-green-800 text-green-400 hover:bg-green-900/20"
                     } disabled:opacity-40`}
                   >
-                    {tenant.isActive ? "Nonaktifkan" : "Aktifkan"}
+                    {isLoading ? "Menyimpan..." : tenant.isActive ? "Nonaktifkan" : "Aktifkan"}
                   </button>
                 </div>
 
@@ -214,9 +215,10 @@ export default function AdminLayout() {
                   {(["starter", "pro"] as Plan[]).map((p) => (
                     <button
                       key={p}
+                      type="button"
                       onClick={() => void patchTenant(tenant.id, { plan: p })}
                       disabled={tenant.plan === p || isLoading}
-                      className={`text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors disabled:opacity-40 ${
+                      className={`text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-default ${
                         tenant.plan === p
                           ? p === "pro"
                             ? "bg-[#C6FF3D]/20 border-[#C6FF3D] text-[#C6FF3D]"
@@ -241,9 +243,10 @@ export default function AdminLayout() {
                       return (
                         <button
                           key={key}
+                          type="button"
                           onClick={() => toggleFeature(tenant, key)}
                           disabled={isLoading}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-left text-xs transition-colors disabled:opacity-40 ${
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-left text-xs transition-colors cursor-pointer disabled:opacity-40 ${
                             isOn
                               ? "bg-[#C6FF3D]/10 border-[#C6FF3D]/40 text-[#C6FF3D]"
                               : "bg-[#101014] border-[#27272a] text-[#71717a]"

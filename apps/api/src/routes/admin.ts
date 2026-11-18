@@ -138,11 +138,30 @@ adminRoutes.patch("/tenants/:id", async (c) => {
 
     if (fields.length === 0) return null;
 
-    const res = await db.query<{ id: string; name: string; plan: string; is_active: boolean }>(
-      `UPDATE tenants SET ${fields.join(", ")} WHERE id = $1 RETURNING id, name, plan, is_active`,
+    const res = await db.query<{
+      id: string;
+      name: string;
+      slug: string;
+      plan: string;
+      feature_flags: Record<string, unknown>;
+      is_active: boolean;
+      created_at: string;
+    }>(
+      `UPDATE tenants SET ${fields.join(", ")} WHERE id = $1
+       RETURNING id, name, slug, plan, feature_flags, is_active, created_at`,
       values,
     );
-    return res.rows[0];
+    const r = res.rows[0];
+    if (!r) return null;
+    return {
+      id: r.id,
+      name: r.name,
+      slug: r.slug,
+      plan: r.plan,
+      featureFlags: r.feature_flags ?? {},
+      isActive: r.is_active,
+      createdAt: r.created_at,
+    };
   });
 
   if (!updated) throw new HTTPException(404, { message: "Tenant tidak ditemukan." });
