@@ -54,13 +54,16 @@ app.route("/api/admin", adminRoutes);
 app.route("/public", publicRoutes);
 
 // Static assets from built frontend SPA
-app.use("/*", serveStatic({ root: "./apps/web/dist" }));
+const serveDist = serveStatic({ root: "./apps/web/dist" });
+const serveIndex = serveStatic({ path: "./apps/web/dist/index.html" });
+app.use("/*", serveDist);
 // SPA fallback for frontend routes (non-API)
-app.get("*", (c, next) => {
+app.get("*", async (c, next) => {
   if (c.req.path.startsWith("/api/") || c.req.path.startsWith("/public/")) {
     return c.json({ error: "Alamat tidak ditemukan." }, 404);
   }
-  return serveStatic({ path: "./apps/web/dist/index.html" })(c, next);
+  const res = await serveIndex(c, next);
+  return res ?? c.notFound();
 });
 
 app.notFound((c) => c.json({ error: "Alamat tidak ditemukan." }, 404));

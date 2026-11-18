@@ -36,16 +36,14 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function RequireRole({ roles, children }: { roles: string[]; children: React.ReactNode }) {
-  const { user } = useAuth();
-  if (!user || !roles.includes(user.role)) return <Navigate to="/antrian" replace />;
-  return <>{children}</>;
+function defaultHome(role?: string) {
+  return role === "super_admin" ? "/admin" : "/antrian";
 }
 
-function DefaultIndexRoute() {
+function RequireRole({ roles, children }: { roles: string[]; children: React.ReactNode }) {
   const { user } = useAuth();
-  if (user?.role === "super_admin") return <Navigate to="/admin" replace />;
-  return <Navigate to="/antrian" replace />;
+  if (!user || !roles.includes(user.role)) return <Navigate to={defaultHome(user?.role)} replace />;
+  return <>{children}</>;
 }
 
 export default function App() {
@@ -69,8 +67,8 @@ export default function App() {
     >
       <Routes>
         {/* Public routes */}
-        <Route path="/login" element={user ? <Navigate to="/antrian" replace /> : <LoginPage />} />
-        <Route path="/daftar" element={user ? <Navigate to="/antrian" replace /> : <RegisterPage />} />
+        <Route path="/login" element={user ? <Navigate to={defaultHome(user.role)} replace /> : <LoginPage />} />
+        <Route path="/daftar" element={user ? <Navigate to={defaultHome(user.role)} replace /> : <RegisterPage />} />
         <Route path="/receipt/:token" element={<PublicReceiptPage />} />
         <Route path="/:slug/book" element={<PublicBookingPage />} />
 
@@ -82,8 +80,15 @@ export default function App() {
             </RequireAuth>
           }
         >
-          <Route index element={<DefaultIndexRoute />} />
-          <Route path="/antrian" element={<QueuePage />} />
+          <Route index element={<Navigate to={defaultHome(user?.role)} replace />} />
+          <Route
+            path="/antrian"
+            element={
+              <RequireRole roles={["owner", "cashier", "barber"]}>
+                <QueuePage />
+              </RequireRole>
+            }
+          />
           <Route
             path="/kasir"
             element={
@@ -92,7 +97,14 @@ export default function App() {
               </RequireRole>
             }
           />
-          <Route path="/pelanggan" element={<CustomersPage />} />
+          <Route
+            path="/pelanggan"
+            element={
+              <RequireRole roles={["owner", "cashier", "barber"]}>
+                <CustomersPage />
+              </RequireRole>
+            }
+          />
           <Route
             path="/booking"
             element={
@@ -126,14 +138,6 @@ export default function App() {
             <Route path="pengguna" element={<UsersSettingsPage />} />
             <Route path="komisi" element={<CommissionSettingsPage />} />
           </Route>
-          <Route
-            path="/admin"
-            element={
-              <RequireRole roles={["super_admin"]}>
-                <AdminLayout />
-              </RequireRole>
-            }
-          />
           <Route
             path="/admin/*"
             element={
