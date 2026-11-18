@@ -2,8 +2,13 @@
   "name": "barberflow",
   "private": true,
   "version": "0.2.0",
-  "engines": { "node": ">=22" },
-  "workspaces": ["apps/*", "packages/*"],
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "db:up": "docker compose -f docker-compose.dev.yml up -d",
     "db:down": "docker compose -f docker-compose.dev.yml down",
@@ -22,5 +27,8 @@
   },
   "devDependencies": {
     "pg": "^8.13.0"
+  },
+  "dependencies": {
+    "railway": "^3.17.0"
   }
 }
