@@ -57,12 +57,22 @@ app.route("/public", publicRoutes);
 const serveDist = serveStatic({ root: "./apps/web/dist" });
 const serveIndex = serveStatic({ path: "./apps/web/dist/index.html" });
 app.use("/*", async (c, next) => {
-  await serveDist(c, next);
-  if (c.req.path === "/" || c.req.path === "/index.html" || c.req.path === "/sw.js" || c.req.path === "/registerSW.js") {
-    c.res.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
-  } else if (c.req.path.startsWith("/assets/")) {
-    c.res.headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  const res = await serveDist(c, next);
+  if (!res) return;
+  if (res.status === 200) {
+    const p = c.req.path;
+    if (p === "/" || p === "/index.html" || p === "/sw.js" || p === "/registerSW.js") {
+      const headers = new Headers(res.headers);
+      headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+    }
+    if (p.startsWith("/assets/")) {
+      const headers = new Headers(res.headers);
+      headers.set("Cache-Control", "public, max-age=31536000, immutable");
+      return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+    }
   }
+  return res;
 });
 // SPA fallback for frontend routes (non-API and non-asset)
 app.get("*", async (c, next) => {
@@ -74,9 +84,13 @@ app.get("*", async (c, next) => {
   if (p.startsWith("/assets/") || p.startsWith("/icons/") || /\.[a-z0-9]+$/i.test(p)) {
     return c.text("Not Found", 404);
   }
-  c.header("Cache-Control", "no-cache, no-store, must-revalidate");
   const res = await serveIndex(c, next);
-  return res ?? c.notFound();
+  if (res) {
+    const headers = new Headers(res.headers);
+    headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+  }
+  return c.notFound();
 });
 
 app.notFound((c) => c.json({ error: "Alamat tidak ditemukan." }, 404));
