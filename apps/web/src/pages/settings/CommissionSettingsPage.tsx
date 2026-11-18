@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../../lib/api.ts";
-import { useAuth } from "../../lib/auth.tsx";
+import { useFeature } from "../../lib/auth.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import { Input } from "../../components/ui/Input.tsx";
 import { Modal } from "../../components/ui/Modal.tsx";
@@ -34,7 +34,7 @@ interface CommissionSummaryItem {
 }
 
 export default function CommissionSettingsPage() {
-  const { plan } = useAuth();
+  const hasCommissions = useFeature("commissions");
   const [rules, setRules] = useState<CommissionRuleItem[]>([]);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [barbers, setBarbers] = useState<BarberOption[]>([]);
@@ -87,9 +87,13 @@ export default function CommissionSettingsPage() {
   };
 
   useEffect(() => {
-    void loadAll();
-    void loadSummary();
-  }, []);
+    if (hasCommissions) {
+      void loadAll();
+      void loadSummary();
+    } else {
+      setLoading(false);
+    }
+  }, [hasCommissions]);
 
   const openModal = () => {
     if (services.length > 0) setSelectedServiceId(services[0]!.id);
@@ -130,7 +134,7 @@ export default function CommissionSettingsPage() {
     }
   };
 
-  if (plan !== "pro") {
+  if (!hasCommissions) {
     return (
       <div className="p-8 text-center space-y-4 max-w-md mx-auto">
         <div className="w-14 h-14 bg-yellow-900/30 text-yellow-400 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">

@@ -57,7 +57,7 @@ export default function TransactionsPage() {
     try {
       setLoading(true);
       const res = await api.get<{ items: TransactionItem[] }>("/api/transactions");
-      setItems(res.items);
+      setItems(res.items ?? []);
     } catch (err) {
       console.error(err);
     } finally {

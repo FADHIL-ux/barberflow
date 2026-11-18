@@ -57,7 +57,7 @@ export default function BarbersSettingsPage() {
     setEditingId(item.id);
     setDisplayName(item.displayName);
     setPhone(item.phone ?? "");
-    setSkillsText(item.skills.join(", "));
+    setSkillsText((item.skills ?? []).join(", "));
     setIsActive(item.isActive);
     setError(null);
     setModalOpen(true);
@@ -137,8 +137,8 @@ export default function BarbersSettingsPage() {
                   <td className="px-4 py-3 text-[#71717a]">{b.phone ?? "-"}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
-                      {b.skills.length > 0 ? (
-                        b.skills.map((s, idx) => (
+                      {(b.skills ?? []).length > 0 ? (
+                        (b.skills ?? []).map((s, idx) => (
                           <span key={idx} className="text-xs bg-[#27272a] text-[#f4f4f5] px-2 py-0.5 rounded-md">
                             {s}
                           </span>

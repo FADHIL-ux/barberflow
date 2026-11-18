@@ -33,6 +33,7 @@ interface BarberOption {
 export default function QueuePage() {
   const { user } = useAuth();
   const isOwner = user?.role === "owner";
+  const canCreateQueue = user?.role === "owner" || user?.role === "cashier";
 
 
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -51,7 +52,7 @@ export default function QueuePage() {
   const fetchQueue = async () => {
     try {
       const res = await api.get<{ items: QueueItem[] }>("/api/queue/today");
-      setQueue(res.items);
+      setQueue(res.items ?? []);
     } catch (err) {
       console.error("Gagal memuat antrean:", err);
     }
@@ -160,9 +161,11 @@ export default function QueuePage() {
           <h1 className="text-2xl font-bold text-[#f4f4f5]">Antrean Hari Ini</h1>
           <p className="text-sm text-[#71717a] mt-1">Papan kendali antrean pelanggan dan kapster</p>
         </div>
-        <Button onClick={() => { setError(null); setModalOpen(true); }}>
-          + Antrean Baru
-        </Button>
+        {canCreateQueue && (
+          <Button onClick={() => { setError(null); setModalOpen(true); }}>
+            + Antrean Baru
+          </Button>
+        )}
       </div>
 
       {loading ? (

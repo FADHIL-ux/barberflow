@@ -33,12 +33,14 @@ export default function ProfileSettingsPage() {
 
   useEffect(() => {
     api
-      .get<ProfileData>("/api/profile")
+      .get<ProfileData | null>("/api/profile")
       .then((res) => {
-        setData({
-          ...res,
-          phone: res.phone ?? "",
-        });
+        if (res) {
+          setData({
+            ...res,
+            phone: res.phone ?? "",
+          });
+        }
       })
       .catch((err) => {
         setMsg({ type: "error", text: err instanceof ApiError ? err.message : "Gagal memuat profil." });

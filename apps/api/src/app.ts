@@ -56,12 +56,25 @@ app.route("/public", publicRoutes);
 // Static assets from built frontend SPA
 const serveDist = serveStatic({ root: "./apps/web/dist" });
 const serveIndex = serveStatic({ path: "./apps/web/dist/index.html" });
-app.use("/*", serveDist);
-// SPA fallback for frontend routes (non-API)
+app.use("/*", async (c, next) => {
+  await serveDist(c, next);
+  if (c.req.path === "/" || c.req.path === "/index.html" || c.req.path === "/sw.js" || c.req.path === "/registerSW.js") {
+    c.res.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+  } else if (c.req.path.startsWith("/assets/")) {
+    c.res.headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  }
+});
+// SPA fallback for frontend routes (non-API and non-asset)
 app.get("*", async (c, next) => {
-  if (c.req.path.startsWith("/api/") || c.req.path.startsWith("/public/")) {
+  const p = c.req.path;
+  if (p.startsWith("/api/") || p.startsWith("/public/")) {
     return c.json({ error: "Alamat tidak ditemukan." }, 404);
   }
+  // Never serve index.html for missing JS/CSS/image assets — prevents MIME/ChunkLoadError black screens
+  if (p.startsWith("/assets/") || p.startsWith("/icons/") || /\.[a-z0-9]+$/i.test(p)) {
+    return c.text("Not Found", 404);
+  }
+  c.header("Cache-Control", "no-cache, no-store, must-revalidate");
   const res = await serveIndex(c, next);
   return res ?? c.notFound();
 });

@@ -110,7 +110,17 @@ customerRoutes.get("/:id/visits", async (c) => {
     return res.rows;
   });
 
-  return c.json({ items: visits });
+  return c.json({
+    items: visits.map((v) => ({
+      id: v.id,
+      receiptNumber: v.receipt_number,
+      occurredAt: v.occurred_at,
+      totalIdr: v.total_idr,
+      paymentMethod: v.payment_method,
+      barberName: v.barber_name,
+      items: v.items ?? [],
+    })),
+  });
 });
 
 // POST /api/customers -> Tambah pelanggan baru

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api.ts";
+import { useAuth } from "../lib/auth.tsx";
 import { Button } from "../components/ui/Button.tsx";
 import { Input } from "../components/ui/Input.tsx";
 import { Modal } from "../components/ui/Modal.tsx";
@@ -36,6 +37,8 @@ interface BarberOption {
 }
 
 export default function CustomersPage() {
+  const { user } = useAuth();
+  const canManageCustomers = user?.role === "owner" || user?.role === "cashier";
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [barbers, setBarbers] = useState<BarberOption[]>([]);
   const [search, setSearch] = useState("");
@@ -66,7 +69,7 @@ export default function CustomersPage() {
       setLoading(true);
       const url = keyword ? `/api/customers?search=${encodeURIComponent(keyword)}` : "/api/customers";
       const res = await api.get<{ items: CustomerItem[] }>(url);
-      setCustomers(res.items);
+      setCustomers(res.items ?? []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -183,7 +186,9 @@ export default function CustomersPage() {
             Data kunjungan, selera potongan rambut, & kepatuhan privasi (UU PDP No. 27/2022)
           </p>
         </div>
-        <Button onClick={openCreateModal}>+ Tambah Pelanggan</Button>
+        {canManageCustomers && (
+          <Button onClick={openCreateModal}>+ Tambah Pelanggan</Button>
+        )}
       </div>
 
       {/* Bar Pencarian */}
@@ -252,17 +257,21 @@ export default function CustomersPage() {
                     <Button variant="ghost" size="sm" onClick={() => void openHistory(c)}>
                       Riwayat
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => openEditModal(c)}>
-                      Ubah
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
-                      onClick={() => void handleDelete(c)}
-                    >
-                      Hapus
-                    </Button>
+                    {canManageCustomers && (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => openEditModal(c)}>
+                          Ubah
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                          onClick={() => void handleDelete(c)}
+                        >
+                          Hapus
+                        </Button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}

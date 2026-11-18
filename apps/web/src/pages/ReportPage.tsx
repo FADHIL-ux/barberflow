@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, ApiError } from "../lib/api.ts";
-import { useAuth } from "../lib/auth.tsx";
+import { useAuth, useFeature } from "../lib/auth.tsx";
 import { Button } from "../components/ui/Button.tsx";
 import { Input } from "../components/ui/Input.tsx";
 import { Modal } from "../components/ui/Modal.tsx";
@@ -33,7 +33,8 @@ interface ExpenseItem {
 }
 
 export default function ReportPage() {
-  const { user, plan } = useAuth();
+  const { user } = useAuth();
+  const hasFinancialReports = useFeature("financial_reports");
   const isOwner = user?.role === "owner";
   const navigate = useNavigate();
 
@@ -41,6 +42,7 @@ export default function ReportPage() {
   const [report, setReport] = useState<DailyReportData | null>(null);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reportError, setReportError] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
 
   // Modal Input Pengeluaran
@@ -78,26 +80,27 @@ export default function ReportPage() {
   const fetchReport = async (date: string) => {
     try {
       setLoading(true);
+      setReportError(null);
       const [repRes, expRes] = await Promise.all([
         api.get<DailyReportData>(`/api/reports/daily?date=${date}`),
         api.get<{ items: ExpenseItem[] }>("/api/expenses"),
       ]);
       setReport(repRes);
-      setExpenses(expRes.items);
+      setExpenses(expRes.items ?? []);
     } catch (err) {
-      console.error(err);
+      setReportError(err instanceof ApiError ? err.message : "Gagal memuat laporan keuangan.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (plan === "pro") {
+    if (hasFinancialReports) {
       void fetchReport(selectedDate);
     } else {
       setLoading(false);
     }
-  }, [plan, selectedDate]);
+  }, [hasFinancialReports, selectedDate]);
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,7 +134,7 @@ export default function ReportPage() {
     }
   };
 
-  if (plan !== "pro") {
+  if (!hasFinancialReports) {
     return (
       <div className="p-8 text-center space-y-4 max-w-md mx-auto min-h-[60dvh] flex flex-col justify-center items-center">
         <div className="w-16 h-16 bg-yellow-900/30 text-yellow-400 rounded-full flex items-center justify-center text-3xl font-bold">
@@ -186,7 +189,9 @@ export default function ReportPage() {
         </div>
       </div>
 
-      {loading || !report ? (
+      {reportError ? (
+        <div className="p-4 bg-red-900/30 border border-red-800 text-red-400 text-sm rounded-xl">{reportError}</div>
+      ) : loading || !report ? (
         <p className="text-sm text-[#71717a]">Memuat laporan...</p>
       ) : (
         <>
