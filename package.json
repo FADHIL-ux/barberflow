@@ -16,7 +16,9 @@
     "test:unit": "node --test \"packages/shared/src/**/*.test.ts\"",
     "test:e2e": "playwright test",
     "typecheck": "npm run typecheck -w @barberflow/shared && npm run typecheck -w @barberflow/api && npm run typecheck -w @barberflow/web",
-    "build:web": "npm run build -w @barberflow/web"
+    "build:web": "npm run build -w @barberflow/web",
+    "build:api": "npm run build -w @barberflow/api",
+    "start:api": "node apps/api/dist/index.js"
   },
   "devDependencies": {
     "pg": "^8.13.0"
