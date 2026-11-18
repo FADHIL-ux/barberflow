@@ -168,3 +168,19 @@ adminRoutes.patch("/tenants/:id", async (c) => {
   return c.json(updated);
 });
 
+// DELETE /api/admin/tenants/:id -> Hapus tenant beserta seluruh datanya secara aman (Khusus Super Admin)
+adminRoutes.delete("/tenants/:id", async (c) => {
+  const id = parseId(c.req.param("id"));
+
+  const deleted = await withPlatform(async (db) => {
+    const res = await db.query<{ deleted: boolean }>(
+      "SELECT app_private.platform_delete_tenant($1) AS deleted",
+      [id],
+    );
+    return res.rows[0]?.deleted ?? false;
+  });
+
+  if (!deleted) throw new HTTPException(404, { message: "Tenant tidak ditemukan." });
+  return c.json({ ok: true, message: "Tenant berhasil dihapus." });
+});
+

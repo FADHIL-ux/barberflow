@@ -93,6 +93,25 @@ export default function AdminLayout() {
     void patchTenant(tenant.id, { featureFlags: newFlags });
   };
 
+  const handleDeleteTenant = async (tenant: Tenant) => {
+    if (
+      !window.confirm(
+        `Hapus permanen barbershop "${tenant.name}" (/${tenant.slug})?\n\nSeluruh akun pengguna, antrean, transaksi, pelanggan, dan booking milik barbershop ini akan ikut terhapus dan tidak dapat dikembalikan.`
+      )
+    ) {
+      return;
+    }
+    setPatching((p) => ({ ...p, [tenant.id]: true }));
+    try {
+      await api.del(`/api/admin/tenants/${tenant.id}`);
+      setTenants((prev) => prev.filter((t) => t.id !== tenant.id));
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Gagal menghapus tenant.");
+    } finally {
+      setPatching((p) => ({ ...p, [tenant.id]: false }));
+    }
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
@@ -180,19 +199,29 @@ export default function AdminLayout() {
                     </p>
                   </div>
 
-                  {/* Tombol Aktif/Nonaktif */}
-                  <button
-                    type="button"
-                    onClick={() => void patchTenant(tenant.id, { isActive: !tenant.isActive })}
-                    disabled={isLoading}
-                    className={`text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors cursor-pointer ${
-                      tenant.isActive
-                        ? "border-red-800 text-red-400 hover:bg-red-900/20"
-                        : "border-green-800 text-green-400 hover:bg-green-900/20"
-                    } disabled:opacity-40`}
-                  >
-                    {isLoading ? "Menyimpan..." : tenant.isActive ? "Nonaktifkan" : "Aktifkan"}
-                  </button>
+                  {/* Tombol Aktif/Nonaktif & Hapus */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => void patchTenant(tenant.id, { isActive: !tenant.isActive })}
+                      disabled={isLoading}
+                      className={`text-xs px-3 py-1.5 rounded-lg font-semibold border transition-colors cursor-pointer ${
+                        tenant.isActive
+                          ? "border-amber-800 text-amber-400 hover:bg-amber-900/20"
+                          : "border-green-800 text-green-400 hover:bg-green-900/20"
+                      } disabled:opacity-40`}
+                    >
+                      {isLoading ? "Menyimpan..." : tenant.isActive ? "Nonaktifkan" : "Aktifkan"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleDeleteTenant(tenant)}
+                      disabled={isLoading}
+                      className="text-xs px-3 py-1.5 rounded-lg font-semibold border border-red-800 text-red-400 hover:bg-red-900/20 transition-colors cursor-pointer disabled:opacity-40"
+                    >
+                      Hapus
+                    </button>
+                  </div>
                 </div>
 
                 {/* Statistik */}
@@ -331,12 +360,12 @@ export default function AdminLayout() {
           <Input
             label="Password Sementara"
             type="password"
-            placeholder="Min. 8 karakter"
+            placeholder="Min. 10 karakter"
             value={createForm.ownerPassword}
             onChange={(e) => setCreateForm((f) => ({ ...f, ownerPassword: e.target.value }))}
-            helper="Sampaikan ke pemilik barbershop secara aman"
+            helper="Minimal 10 karakter. Sampaikan ke pemilik barbershop secara aman"
             required
-            minLength={8}
+            minLength={10}
           />
 
           <div className="flex gap-3 pt-2">

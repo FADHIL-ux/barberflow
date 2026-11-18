@@ -105,6 +105,7 @@ export default function ProfileSettingsPage() {
           value={data.name}
           onChange={(e) => setData({ ...data, name: e.target.value })}
           required
+          minLength={2}
         />
 
         <Input

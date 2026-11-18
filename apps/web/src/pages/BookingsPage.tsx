@@ -469,6 +469,7 @@ export default function BookingsPage() {
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
             required
+            minLength={2}
           />
 
           <Input
