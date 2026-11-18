@@ -6,11 +6,12 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-try {
-  process.loadEnvFile(join(root, ".env"));
-} catch {
-  console.error("File .env tidak ditemukan. Salin .env.example menjadi .env terlebih dahulu.");
-  process.exit(1);
+if (!process.env.DATABASE_URL_OWNER) {
+  try {
+    process.loadEnvFile(join(root, ".env"));
+  } catch {
+    console.warn("File .env tidak ditemukan, menggunakan environment variables yang ada.");
+  }
 }
 
 const { Client } = require("pg");
