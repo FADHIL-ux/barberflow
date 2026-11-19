@@ -71,11 +71,11 @@ export default function QueuePage() {
   const fetchMeta = async () => {
     try {
       const [svcRes, barRes] = await Promise.all([
-        api.get<{ items: ServiceOption[] }>("/api/services"),
-        api.get<{ items: BarberOption[] }>("/api/barbers"),
+        api.get<{ items: Array<ServiceOption & { isActive?: boolean }> }>("/api/services"),
+        api.get<{ items: Array<BarberOption & { isActive?: boolean }> }>("/api/barbers"),
       ]);
-      setServices(svcRes.items);
-      setBarbers(barRes.items);
+      setServices(svcRes.items.filter((s) => s.isActive !== false));
+      setBarbers(barRes.items.filter((b) => b.isActive !== false));
     } catch (err) {
       console.error("Gagal memuat metadata:", err);
     }
@@ -326,22 +326,28 @@ export default function QueuePage() {
           <div className="flex flex-col gap-2 w-full text-left">
             <label className="text-sm font-medium text-[#f4f4f5]">Pilih Layanan</label>
             <div className="space-y-2 max-h-48 overflow-y-auto p-2 bg-[#101014] rounded-xl border border-[#27272a]">
-              {services.map((s) => (
-                <label key={s.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#27272a] cursor-pointer text-sm">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedServiceIds.includes(s.id)}
-                      onChange={() => toggleService(s.id)}
-                      className="accent-[#C6FF3D] w-4 h-4"
-                    />
-                    <span>{s.name}</span>
-                  </div>
-                  <span className="text-xs text-[#71717a]">
-                    Rp {s.priceIdr.toLocaleString("id-ID")}
-                  </span>
-                </label>
-              ))}
+              {services.length === 0 ? (
+                <p className="text-xs text-yellow-400 p-2 text-center">
+                  Belum ada layanan aktif. Silakan tambahkan layanan di menu Pengaturan &gt; Layanan.
+                </p>
+              ) : (
+                services.map((s) => (
+                  <label key={s.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-[#27272a] cursor-pointer text-sm">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedServiceIds.includes(s.id)}
+                        onChange={() => toggleService(s.id)}
+                        className="accent-[#C6FF3D] w-4 h-4"
+                      />
+                      <span>{s.name}</span>
+                    </div>
+                    <span className="text-xs text-[#71717a]">
+                      Rp {s.priceIdr.toLocaleString("id-ID")}
+                    </span>
+                  </label>
+                ))
+              )}
             </div>
           </div>
 

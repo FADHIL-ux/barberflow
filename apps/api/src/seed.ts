@@ -85,6 +85,17 @@ export async function runMigrationsAndSeed() {
     const exists = await client.query("SELECT 1 FROM tenants WHERE slug = 'demo-barbershop'");
     if (exists.rowCount && exists.rowCount > 0) {
       console.log("Akun demo sudah tersedia di database.");
+      await client.query(`
+        INSERT INTO barbers (tenant_id, display_name, skills)
+        SELECT t.id, 'Kapster Utama', ARRAY['Fade', 'Classic Cut']
+        FROM tenants t
+        WHERE NOT EXISTS (SELECT 1 FROM barbers b WHERE b.tenant_id = t.id);
+
+        INSERT INTO services (tenant_id, name, price_idr, duration_minutes, description)
+        SELECT t.id, 'Potong Rambut', 50000, 30, 'Potong rambut standar dan merapikan'
+        FROM tenants t
+        WHERE NOT EXISTS (SELECT 1 FROM services s WHERE s.tenant_id = t.id);
+      `);
       return;
     }
 

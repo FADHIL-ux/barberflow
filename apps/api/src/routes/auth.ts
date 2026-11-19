@@ -72,7 +72,21 @@ authRoutes.post("/register", registerLimiter, async (c) => {
 
   const auth: AuthContext = { userId, tenantId, role: "owner", name: input.ownerName };
   setSession(c, await createSessionToken(auth));
-  await withTenant(tenantId, (db) => writeAudit(db, auth, "tenant.registered", "tenant", tenantId));
+  await withTenant(tenantId, async (db) => {
+    await writeAudit(db, auth, "tenant.registered", "tenant", tenantId);
+    await db.query(
+      `INSERT INTO services (tenant_id, name, price_idr, duration_minutes, description) VALUES
+        ($1, 'Potong Rambut', 50000, 30, 'Potong rambut standar dan rapikan'),
+        ($1, 'Cukur Jenggot', 25000, 15, 'Cukur dan rapikan jenggot'),
+        ($1, 'Paket Cukur + Rambut', 70000, 45, 'Potong rambut dan cukur jenggot')`,
+      [tenantId],
+    );
+    await db.query(
+      `INSERT INTO barbers (tenant_id, user_id, display_name, skills) VALUES
+        ($1, $2, $3, ARRAY['Classic Cut', 'Fade'])`,
+      [tenantId, userId, input.ownerName],
+    );
+  });
   return c.json({ user: { id: userId, name: input.ownerName, role: "owner" } }, 201);
 });
 

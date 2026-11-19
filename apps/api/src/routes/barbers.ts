@@ -18,8 +18,9 @@ const toDto = (r: BarberRow) => ({
 const COLUMNS = "id, display_name, phone, photo_url, skills, is_active";
 
 barberRoutes.get("/", async (c) => {
-  const rows = await withTenant(tenantIdOf(c), async (db) =>
-    (await db.query<BarberRow>(`SELECT ${COLUMNS} FROM barbers ORDER BY display_name`)).rows);
+  const tenantId = tenantIdOf(c);
+  const rows = await withTenant(tenantId, async (db) =>
+    (await db.query<BarberRow>(`SELECT ${COLUMNS} FROM barbers WHERE tenant_id = $1 ORDER BY display_name`, [tenantId])).rows);
   return c.json({ items: rows.map(toDto) });
 });
 
@@ -38,14 +39,15 @@ barberRoutes.post("/", requireRole("owner"), async (c) => {
 });
 
 barberRoutes.put("/:id", requireRole("owner"), async (c) => {
+  const tenantId = tenantIdOf(c);
   const id = parseId(c.req.param("id"));
   const input = await parseBody(c, barberSchema);
   const auth = c.get("auth");
-  const row = await withTenant(tenantIdOf(c), async (db) => {
+  const row = await withTenant(tenantId, async (db) => {
     const r = await db.query<BarberRow>(
       `UPDATE barbers SET display_name = $2, phone = $3, skills = $4, is_active = $5
-       WHERE id = $1 RETURNING ${COLUMNS}`,
-      [id, input.displayName, input.phone, input.skills, input.isActive]);
+       WHERE id = $1 AND tenant_id = $6 RETURNING ${COLUMNS}`,
+      [id, input.displayName, input.phone, input.skills, input.isActive, tenantId]);
     if (r.rows[0]) await writeAudit(db, auth, "barber.update", "barber", id, { name: input.displayName });
     return r.rows[0];
   });
@@ -54,11 +56,12 @@ barberRoutes.put("/:id", requireRole("owner"), async (c) => {
 });
 
 barberRoutes.delete("/:id", requireRole("owner"), async (c) => {
+  const tenantId = tenantIdOf(c);
   const id = parseId(c.req.param("id"));
   const auth = c.get("auth");
   try {
-    const deleted = await withTenant(tenantIdOf(c), async (db) => {
-      const r = await db.query("DELETE FROM barbers WHERE id = $1", [id]);
+    const deleted = await withTenant(tenantId, async (db) => {
+      const r = await db.query("DELETE FROM barbers WHERE id = $1 AND tenant_id = $2", [id, tenantId]);
       if (r.rowCount) await writeAudit(db, auth, "barber.delete", "barber", id);
       return r.rowCount ?? 0;
     });

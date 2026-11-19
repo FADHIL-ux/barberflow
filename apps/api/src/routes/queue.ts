@@ -79,11 +79,11 @@ queueRoutes.get("/today", async (c) => {
       LEFT JOIN barbers b ON b.id = qe.barber_id AND b.tenant_id = qe.tenant_id
       LEFT JOIN queue_entry_services qes ON qes.queue_entry_id = qe.id AND qes.tenant_id = qe.tenant_id
       LEFT JOIN services s ON s.id = qes.service_id AND s.tenant_id = qe.tenant_id
-      WHERE qe.queue_date = CURRENT_DATE
+      WHERE qe.tenant_id = $1 AND qe.queue_date = CURRENT_DATE
       GROUP BY qe.id, b.display_name
       ORDER BY qe.queue_number ASC
     `;
-    const res = await db.query<QueueRow>(q);
+    const res = await db.query<QueueRow>(q, [tenantId]);
     return res.rows;
   });
 

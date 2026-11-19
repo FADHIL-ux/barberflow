@@ -18,8 +18,9 @@ const toDto = (r: ServiceRow) => ({
 const COLUMNS = "id, name, price_idr, duration_minutes, description, is_active";
 
 serviceRoutes.get("/", async (c) => {
-  const rows = await withTenant(tenantIdOf(c), async (db) =>
-    (await db.query<ServiceRow>(`SELECT ${COLUMNS} FROM services ORDER BY name`)).rows);
+  const tenantId = tenantIdOf(c);
+  const rows = await withTenant(tenantId, async (db) =>
+    (await db.query<ServiceRow>(`SELECT ${COLUMNS} FROM services WHERE tenant_id = $1 ORDER BY name`, [tenantId])).rows);
   return c.json({ items: rows.map(toDto) });
 });
 
@@ -43,15 +44,16 @@ serviceRoutes.post("/", requireRole("owner"), async (c) => {
 });
 
 serviceRoutes.put("/:id", requireRole("owner"), async (c) => {
+  const tenantId = tenantIdOf(c);
   const id = parseId(c.req.param("id"));
   const input = await parseBody(c, serviceSchema);
   const auth = c.get("auth");
   try {
-    const row = await withTenant(tenantIdOf(c), async (db) => {
+    const row = await withTenant(tenantId, async (db) => {
       const r = await db.query<ServiceRow>(
         `UPDATE services SET name = $2, price_idr = $3, duration_minutes = $4, description = $5, is_active = $6
-         WHERE id = $1 RETURNING ${COLUMNS}`,
-        [id, input.name, input.priceIdr, input.durationMinutes, input.description, input.isActive]);
+         WHERE id = $1 AND tenant_id = $7 RETURNING ${COLUMNS}`,
+        [id, input.name, input.priceIdr, input.durationMinutes, input.description, input.isActive, tenantId]);
       if (r.rows[0]) await writeAudit(db, auth, "service.update", "service", id, { name: input.name });
       return r.rows[0];
     });
@@ -64,11 +66,12 @@ serviceRoutes.put("/:id", requireRole("owner"), async (c) => {
 });
 
 serviceRoutes.delete("/:id", requireRole("owner"), async (c) => {
+  const tenantId = tenantIdOf(c);
   const id = parseId(c.req.param("id"));
   const auth = c.get("auth");
   try {
-    const deleted = await withTenant(tenantIdOf(c), async (db) => {
-      const r = await db.query("DELETE FROM services WHERE id = $1", [id]);
+    const deleted = await withTenant(tenantId, async (db) => {
+      const r = await db.query("DELETE FROM services WHERE id = $1 AND tenant_id = $2", [id, tenantId]);
       if (r.rowCount) await writeAudit(db, auth, "service.delete", "service", id);
       return r.rowCount ?? 0;
     });
