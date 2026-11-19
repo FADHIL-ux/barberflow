@@ -27,8 +27,8 @@ function slugify(name: string): string {
   return `${base.length >= 3 ? base : "barbershop"}-${randomBytes(2).toString("hex")}`;
 }
 
-const loginLimiter = rateLimit({ windowMs: 15 * 60_000, max: 10, key: (c) => `login:${clientIp(c)}` });
-const registerLimiter = rateLimit({ windowMs: 60 * 60_000, max: 5, key: (c) => `register:${clientIp(c)}` });
+const loginLimiter = rateLimit({ windowMs: 1 * 60_000, max: 60, key: (c) => `login:${clientIp(c)}` });
+const registerLimiter = rateLimit({ windowMs: 15 * 60_000, max: 20, key: (c) => `register:${clientIp(c)}` });
 
 authRoutes.post("/login", loginLimiter, async (c) => {
   const input = await parseBody(c, loginSchema);
